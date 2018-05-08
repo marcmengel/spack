@@ -54,6 +54,12 @@ class Xrootd(CMakePackage):
     variant('readline', default=True,
             description='Use readline')
 
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     depends_on('bzip2')
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
@@ -78,3 +84,26 @@ class Xrootd(CMakePackage):
             '-DENABLE_CEPH:BOOL=OFF'
         ]
         return options
+
+    def setup_environment(self, spack_env, run_env):
+        cxxstdflag = ''
+        if self.spec.variants['cxxstd'].value == '98':
+            cxxstdflag = self.compiler.cxx98_flag
+        elif self.spec.variants['cxxstd'].value == '11':
+            cxxstdflag = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            cxxstdflag = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            cxxstdflag = self.compiler.cxx17_flag
+        elif self.spec.variants['cxxstd'].value == 'default':
+            # Let the compiler do what it usually does.
+            pass
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die(
+                "INTERNAL ERROR: cannot accommodate unexpected variant ",
+                "cxxstd={0}".format(self.spec.variants['cxxstd'].value))
+
+        if cxxstdflag:
+            spack_env['CXXFLAGS'] = cxxstdflag
