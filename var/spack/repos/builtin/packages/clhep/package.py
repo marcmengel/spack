@@ -33,8 +33,11 @@ class Clhep(CMakePackage):
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    version('2.4.0.4', 'e1c48324507e5be41d76772a14eff242')
+    version('2.4.0.2', '5e11db4d696f0654334369d17c71e42a')
     version('2.4.0.1', 'f06aa2924abbfee0afd5a9beaaa883cf')
     version('2.4.0.0', '9af6644e4e04d6807f53956512b7396a')
+    version('2.3.4.6', 'a38bf1b5bb36901214b46b209d4a4c66')
     version('2.3.4.5', '31b4785b40706ff7503bb9ffd412487a')
     version('2.3.4.4', '8b8a33d0d19213b60d6c22ce5fc93761')
     version('2.3.4.3', '6941279f70d69492fff1aa955f3f2562')
@@ -55,6 +58,7 @@ class Clhep(CMakePackage):
 
     variant('cxx11', default=True, description="Compile using c++11 dialect.")
     variant('cxx14', default=False, description="Compile using c++14 dialect.")
+    variant('cxx17', default=False, description="Compile using c++17 dialect.")
 
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
@@ -86,5 +90,13 @@ class Clhep(CMakePackage):
                 env['CXXFLAGS'] = self.compiler.cxx14_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx14_flag)
+
+        if '+cxx17' in spec:
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx17_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx17_flag
+            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
+                              self.compiler.cxx17_flag)
 
         return cmake_args
