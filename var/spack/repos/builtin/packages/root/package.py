@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import os
 import sys
 
 
@@ -69,7 +70,7 @@ class Root(CMakePackage):
     # No reliable CMake-based build prior to 6.04/00.
 
     patch('format-stringbuf-size.patch', level=0)
-    patch('find-mysql.patch', level=0)
+    patch('find-mysql.patch', level=1)
     patch('honor-unuran-switch.patch', level=1)
 
     if sys.platform == 'darwin':
@@ -90,11 +91,11 @@ class Root(CMakePackage):
 
     depends_on('blas')
     depends_on('cfitsio')
-    depends_on('clhep')
     depends_on('fftw')
     depends_on('freetype')
-    depends_on('graphviz', when='+graphviz')
+    depends_on('gl2ps')
     depends_on('glew')
+    depends_on('graphviz', when='+graphviz')
     depends_on('gsl')
     depends_on('jpeg')
     depends_on('libice')
@@ -103,8 +104,8 @@ class Root(CMakePackage):
     depends_on('libx11')
     depends_on('libxext')
     depends_on('libxft')
-    depends_on('libxml2~python', when='~python')
     depends_on('libxml2+python', when='+python')
+    depends_on('libxml2~python', when='~python')
     depends_on('libxpm')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
     depends_on('mysql-c')
@@ -174,13 +175,15 @@ class Root(CMakePackage):
             'pythia6',  # Temporary
         )
         # Built-in LLVM / Clang is necessary for now: Root build has
-        # local enhancements to Clang.
+        # local enhancements to Clang. AfterImage and FTGL are moribund
+        # packages.
         builtin_on = [
+            'afterimage',
+            'ftgl',
             'llvm',
         ]
         # Everything else should be found externally.
         builtin_off = [
-            'afterimage',
             'cfitsio',
             'davix',
             'fftw3',
@@ -219,12 +222,15 @@ class Root(CMakePackage):
                               '-DCMAKE_CXX_FLAGS={0}')])
 
         args.append('-Dcxx{0}=ON'.format(self.spec.variants['cxxstd'].value))
-        args.append('-DMYSQL_DIR={0}'.format(self.spec['mysql-c'].prefix))
+        if 'mysql-c' in self.spec:
+            args.append('-DCMAKE_PROGRAM_PATH={0}'.format(
+                os.path.join(self.spec['mysql-c'].prefix, 'bin')))
         return args
 
     def setup_environment(self, spack_env, run_env):
         if 'lz4' in self.spec:
-            spack_env.set('LZ4_DIR', self.spec['lz4'].prefix)
+            spack_env.append_path('CMAKE_PREFIX_PATH',
+                                  self.spec['lz4'].prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)
