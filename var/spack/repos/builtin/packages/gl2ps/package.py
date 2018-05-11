@@ -36,12 +36,14 @@ class Gl2ps(CMakePackage):
 
     variant('png',  default=True, description='Enable PNG support')
     variant('zlib', default=True, description='Enable compression using ZLIB')
+    variant('doc', default=False,
+            description='Generate documentation using pdflatex')
 
     depends_on('cmake@2.4:', type='build')
 
-    # TODO: Add missing dependencies on OpenGL/Mesa and LaTeX
-
     # X11 libraries:
+    depends_on('freeglut')
+    depends_on('gl')
     depends_on('libice')
     depends_on('libsm')
     depends_on('libxau')
@@ -59,6 +61,7 @@ class Gl2ps(CMakePackage):
 
     depends_on('libpng', when='+png')
     depends_on('zlib',   when='+zlib')
+    depends_on('texlive', when='+doc')
 
     def variant_to_bool(self, variant):
         return 'ON' if variant in self.spec else 'OFF'
