@@ -106,4 +106,4 @@ class Xrootd(CMakePackage):
                 "cxxstd={0}".format(self.spec.variants['cxxstd'].value))
 
         if cxxstdflag:
-            spack_env['CXXFLAGS'] = cxxstdflag
+            spack_env.append_flags('CXXFLAGS', cxxstdflag)
