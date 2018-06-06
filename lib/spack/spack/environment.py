@@ -31,13 +31,16 @@ import sys
 import os.path
 import subprocess
 from llnl.util.lang import dedupe
+from spack.util.environment import \
+    deprioritize_system_paths, prune_duplicate_paths
 
 
 class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.args = {'name': name}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'separator': self.separator}
         self.args.update(kwargs)
 
     def update_args(self, **kwargs):
@@ -116,6 +119,28 @@ class RemovePath(NameValueModifier):
             self.separator) if environment_value else []
         directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
+        os.environ[self.name] = self.separator.join(directories)
+
+
+class DeprioritizeSystemPaths(NameModifier):
+
+    def execute(self):
+        environment_value = os.environ.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = deprioritize_system_paths([os.path.normpath(x)
+                                                 for x in directories])
+        os.environ[self.name] = self.separator.join(directories)
+
+
+class PruneDuplicatePaths(NameModifier):
+
+    def execute(self):
+        environment_value = os.environ.get(self.name, '')
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = prune_duplicate_paths([os.path.normpath(x)
+                                             for x in directories])
         os.environ[self.name] = self.separator.join(directories)
 
 
@@ -247,6 +272,28 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
+        self.env_modifications.append(item)
+
+    def deprioritize_system_paths(self, name, **kwargs):
+        """Stores a request to deprioritize system paths in a path list,
+        otherwise preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = DeprioritizeSystemPaths(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def prune_duplicate_paths(self, name, **kwargs):
+        """Stores a request to remove duplicates from a path list, otherwise
+        preserving the order.
+
+        Args:
+            name: name of the path list in the environment.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
     def group_by_name(self):

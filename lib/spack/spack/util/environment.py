@@ -23,6 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import itertools
+from six import iteritems  # For free function iteritems().
+# TODO: This would be easier if we could import builtins in Python2.
+try:
+    from itertools import izip as iterzip
+except ImportError:
+    iterzip = zip
+from operator import itemgetter
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -44,7 +52,26 @@ def is_system_path(path):
 
 
 def filter_system_paths(paths):
+    """Return only paths that are not system paths."""
     return [p for p in paths if not is_system_path(p)]
+
+
+def system_paths(paths):
+    """Return only paths that are system paths."""
+    return [p for p in paths if is_system_path(p)]
+
+
+def deprioritize_system_paths(paths):
+    """Put system paths at the end of paths, otherwise preserving order."""
+    return filter_system_paths(paths) + system_paths(paths)
+
+
+def prune_duplicate_paths(paths):
+    """Returns the paths with duplicates removed, order preserved."""
+    return [key for key, value in
+            sorted(iteritems(dict(iterzip(reversed(paths),
+                                          itertools.count(0, -1)))),
+                   key=itemgetter(1))]
 
 
 def get_path(name):
