@@ -79,6 +79,8 @@ class Root(CMakePackage):
 
     variant('python', default=True, description='Build with python support')
     variant('graphviz', default=False, description='Enable graphviz support')
+    variant('pythia6', default=False, description='Build Pythia6 plugin.')
+    variant('pythia8', default=False, description='Build Pythia8 plugin.')
 
     variant('cxxstd',
             default='11',
@@ -112,6 +114,8 @@ class Root(CMakePackage):
     depends_on('openssl')
     depends_on('pcre')
     depends_on('postgresql-c')
+    depends_on('pythia6', when='+pythia6')
+    depends_on('pythia8', when='+pythia8')
     depends_on('python@2.7:')
     depends_on('sqlite')
     depends_on('tbb')
@@ -122,12 +126,14 @@ class Root(CMakePackage):
 
     extends('python', when='+python')
 
-    # I was unable to build root with any Intel compiler
-    # See https://sft.its.cern.ch/jira/browse/ROOT-7517
-    conflicts('%intel')
+    # Per correspondence on root-planning@cern.ch list, 2018-05-02/03.
+    conflicts('%intel', when='cxxstd=17')
+    conflicts('%intel@:16.99', when='cxxstd=14')
+    conflicts('%intel@:15.99', when='cxxstd=11')
+    conflicts('%intel', when='@:6.09.99')
 
     def cmake_args(self):
-        options_on = (
+        options_on = [
             'fitsio',
             'fortran',
             'gminimal',
@@ -135,8 +141,8 @@ class Root(CMakePackage):
             'mysql',
             'sqlite',
             'x11'
-        )
-        options_off = (
+        ]
+        options_off = [
             'afs',
             'alien',
             'astiff',
@@ -171,9 +177,8 @@ class Root(CMakePackage):
             'vc',
             'veccore',
             'vecgeom',
-            'xft',
-            'pythia6',  # Temporary
-        )
+            'xft'
+        ]
         # Built-in LLVM / Clang is necessary for now: Root build has
         # local enhancements to Clang. AfterImage and FTGL are moribund
         # packages.
@@ -202,11 +207,30 @@ class Root(CMakePackage):
             'zlib'
         ]
 
+        # Deal with python bindings.
+        if self.spec.satisfies('+python ^python@2.7:2.99.99'):
+            options_on.append('python')
+            options_off.append('python3')
+        elif self.spec.satisfies('+python ^python@3.0:'):
+            options_off.append('python')
+            options_on.append('python3')
+        else:
+            options_off.append('python')
+            options_off.append('python3')
+
         # Build system / code weirdness requires Root's builtin LZ4 for
         # some versions.
         bo_ref = builtin_on if self.spec.satisfies('@6.12.02:6.12.99') else \
             builtin_off
         bo_ref.extend(['xxhash', 'lz4'])
+
+        # Optional support for Pythia6
+        bo_ref = options_on if '+pythia6' in self.spec else options_off
+        bo_ref.append('pythia6')
+
+        # Optional support for Pythia8
+        bo_ref = options_on if '+pythia8' in self.spec else options_off
+        bo_ref.append('pythia8')
 
         # Turn our settings into CMake variable settings.
         args = ['-D{0}=ON'.format(x) for x in options_on] + \
