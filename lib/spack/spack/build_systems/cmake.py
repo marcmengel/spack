@@ -203,7 +203,7 @@ class CMakePackage(PackageBase):
 
         :return: directory where to build the package
         """
-        return join_path(self.stage.source_path, 'spack-build')
+        return join_path(self.stage.path, 'spack-build')
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
