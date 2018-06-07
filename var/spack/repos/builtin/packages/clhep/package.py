@@ -56,12 +56,16 @@ class Clhep(CMakePackage):
     version('2.2.0.5', '1584e8ce6ebf395821aed377df315c7c')
     version('2.2.0.4', '71d2c7c2e39d86a0262e555148de01c1')
 
-    variant('cxx11', default=True, description="Compile using c++11 dialect.")
-    variant('cxx14', default=False, description="Compile using c++14 dialect.")
-    variant('cxx17', default=False, description="Compile using c++17 dialect.")
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
 
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
+
+    root_cmakelists_dir = 'CLHEP'  # Extra directory layer.
 
     def patch(self):
         filter_file('SET CMP0042 OLD',
@@ -69,34 +73,20 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
-    root_cmakelists_dir = 'CLHEP'
-
     def cmake_args(self):
         spec = self.spec
-        cmake_args = []
-
-        if '+cxx11' in spec:
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx11_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx11_flag)
-
-        if '+cxx14' in spec:
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx14_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx14_flag)
-
-        if '+cxx17' in spec:
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx17_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx17_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx17_flag)
-
+        cxxstdflg = ''
+        if self.spec.variants['cxxstd'].value == '11':
+            cxxstdflg = self.compiler.cxx11_flag
+        elif self.spec.variants['cxxstd'].value == '14':
+            cxxstdflg = self.compiler.cxx14_flag
+        elif self.spec.variants['cxxstd'].value == '17':
+            cxxstdflg = self.compiler.cxx17_flag
+        else:
+            # The user has selected a (new?) legal value that we've
+            # forgotten to deal with here.
+            tty.die(
+                "INTERNAL ERROR: cannot accommodate unexpected variant ",
+                "cxxstd={0}".format(spec.variants['cxxstd'].value))
+        cmake_args = ['-DCLHEP_BUILD_CXXSTD={0}'.format(cxxstdflg)]
         return cmake_args
