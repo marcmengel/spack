@@ -37,6 +37,7 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
+    version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
     version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
     version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae')
     version('2018.1', 'b2f2fa09adf44a22f4024049907f774b')
@@ -76,12 +77,9 @@ class IntelTbb(Package):
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-#    patch("tbb_gcc_rtm_key.patch", level=0,
-#          when='%gcc@4.8.0: platform_os=rhel6')
-#    patch("tbb_gcc_rtm_key.patch", level=0,
-#          when='%gcc@4.8.0: platform_os=scientific6')
-#    patch("tbb_gcc_rtm_key.patch", level=0,
-#          when='%gcc@4.8.0: platform_os=centos6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
