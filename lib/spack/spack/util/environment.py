@@ -25,13 +25,13 @@
 import contextlib
 import os
 import itertools
-from six import iteritems  # For free function iteritems().
+from six import iteritems
+from operator import itemgetter
 # TODO: This would be easier if we could import builtins in Python2.
 try:
     from itertools import izip as iterzip
 except ImportError:
     iterzip = zip
-from operator import itemgetter
 
 
 system_paths = ['/', '/usr', '/usr/local']
