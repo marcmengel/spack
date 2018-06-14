@@ -30,7 +30,7 @@ from spack.paths import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths, is_system_path
+from spack.util.environment import is_system_path
 
 
 def test_inspect_path(tmpdir):
@@ -81,9 +81,14 @@ def prepare_environment_for_tests():
     os.environ['UNSET_ME'] = 'foo'
     os.environ['EMPTY_PATH_LIST'] = ''
     os.environ['PATH_LIST'] = '/path/second:/path/third'
-    os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
+    os.environ['REMOVE_PATH_LIST'] \
+        = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
+    os.environ['PATH_LIST_WITH_SYSTEM_PATHS'] \
+        = '/usr/include:' + os.environ['REMOVE_PATH_LIST']
+    os.environ['PATH_LIST_WITH_DUPLICATES'] = os.environ['REMOVE_PATH_LIST']
     yield
-    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST'):
+    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST',
+              'PATH_LIST_WITH_SYSTEM_PATHS', 'PATH_LIST_WITH_DUPLICATES'):
         if x in os.environ:
             del os.environ[x]
 
@@ -92,32 +97,6 @@ def prepare_environment_for_tests():
 def env(prepare_environment_for_tests):
     """Returns an empty EnvironmentModifications object."""
     return EnvironmentModifications()
-
-
-@pytest.fixture
-def miscellaneous_paths():
-    """Returns a list of paths, including system ones."""
-    return [
-        '/usr/local/Cellar/gcc/5.3.0/lib',
-        '/usr/local/lib',
-        '/usr/local',
-        '/usr/local/include',
-        '/usr/local/lib64',
-        '/usr/local/opt/some-package/lib',
-        '/usr/opt/lib',
-        '/usr/local/../bin',
-        '/lib',
-        '/',
-        '/usr',
-        '/usr/',
-        '/usr/bin',
-        '/bin64',
-        '/lib64',
-        '/include',
-        '/include/',
-        '/opt/some-package/include',
-        '/opt/some-package/local/..',
-    ]
 
 
 @pytest.fixture
@@ -177,19 +156,6 @@ def test_unset(env):
         os.environ['UNSET_ME']
 
 
-def test_filter_system_paths(miscellaneous_paths):
-    """Tests that the filtering of system paths works as expected."""
-    filtered = filter_system_paths(miscellaneous_paths)
-    expected = [
-        '/usr/local/Cellar/gcc/5.3.0/lib',
-        '/usr/local/opt/some-package/lib',
-        '/usr/opt/lib',
-        '/opt/some-package/include',
-        '/opt/some-package/local/..',
-    ]
-    assert filtered == expected
-
-
 def test_set_path(env):
     """Tests setting paths in an environment variable."""
 
@@ -222,6 +188,9 @@ def test_path_manipulation(env):
     env.remove_path('REMOVE_PATH_LIST', '/remove/this')
     env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
 
+    env.deprioritize_system_paths('PATH_LIST_WITH_SYSTEM_PATHS')
+    env.prune_duplicate_paths('PATH_LIST_WITH_DUPLICATES')
+
     env.apply_modifications()
 
     expected = '/path/first:/path/second:/path/third:/path/last'
@@ -234,6 +203,12 @@ def test_path_manipulation(env):
     assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
 
     assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/f/g'
+
+    assert not os.environ['PATH_LIST_WITH_SYSTEM_PATHS'].\
+        startswith('/usr/include:')
+    assert os.environ['PATH_LIST_WITH_SYSTEM_PATHS'].endswith(':/usr/include')
+
+    assert os.environ['PATH_LIST_WITH_DUPLICATES'].count('/duplicate') == 1
 
 
 def test_extra_arguments(env):
