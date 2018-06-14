@@ -1239,14 +1239,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target(self, target):
+    def _if_make_target_execute(self, target):
         try:
             # Check if we have a makefile
             file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
             file = file.pop()
         except IndexError:
             tty.msg('No Makefile found in the build directory')
-            return False
+            return
 
         # Check if 'target' is in the makefile
         regex = re.compile('^' + target + ':')
@@ -1255,19 +1255,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         if not matches:
             tty.msg("Target '" + target + ":' not found in Makefile")
-            return False
-        return True
+            return
 
-    def _if_make_target_execute(self, target):
-        if self._if_make_target(target):
-            # Execute target
-            inspect.getmodule(self).make(target)
+        # Execute target
+        inspect.getmodule(self).make(target)
 
-    def _if_ninja_target(self, target):
+    def _if_ninja_target_execute(self, target):
         # Check if we have a ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No ninja build script found in the build directory')
-            return False
+            return
 
         # Check if 'target' is in the ninja build script
         regex = re.compile('^build ' + target + ':')
@@ -1276,13 +1273,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         if not matches:
             tty.msg("Target 'build " + target + ":' not found in build.ninja")
-            return False
-        return True
+            return
 
-    def _if_ninja_target_execute(self, target):
-        if self._if_ninja_target(target):
-            # Execute target
-            inspect.getmodule(self).ninja(target)
+        # Execute target
+        inspect.getmodule(self).ninja(target)
 
     def _get_needed_resources(self):
         resources = []

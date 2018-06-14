@@ -255,10 +255,7 @@ class CMakePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             if self.generator == 'Unix Makefiles':
-                # Invoking make test here does not allow parallel behavior,
-                # so use ctest directly if we have a 'test' make target.
-                if self._if_make_target('test'):
-                    inspect.getmodule(self).ctest()
+                self._if_make_target_execute('test')
                 self._if_make_target_execute('check')
             elif self.generator == 'Ninja':
                 self._if_ninja_target_execute('test')

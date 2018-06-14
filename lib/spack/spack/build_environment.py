@@ -373,7 +373,7 @@ def set_module_variables_for_package(pkg, module):
     m.configure = Executable('./configure')
 
     m.cmake = Executable('cmake')
-    m.ctest = MakeExecutable('ctest', jobs)
+    m.ctest = Executable('ctest')
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
