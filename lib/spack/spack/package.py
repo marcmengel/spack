@@ -1239,7 +1239,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
 
-    def _if_make_target_execute(self, target):
+    def _if_make_target_execute(self, target, *args, **kwargs):
         try:
             # Check if we have a makefile
             file = [x for x in ('Makefile', 'makefile') if os.path.exists(x)]
@@ -1258,9 +1258,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return
 
         # Execute target
-        inspect.getmodule(self).make(target)
+        inspect.getmodule(self).make(target, *args, **kwargs)
 
-    def _if_ninja_target_execute(self, target):
+    def _if_ninja_target_execute(self, target, *args, **kwargs):
         # Check if we have a ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No ninja build script found in the build directory')
@@ -1276,7 +1276,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return
 
         # Execute target
-        inspect.getmodule(self).ninja(target)
+        inspect.getmodule(self).ninja(target, *args, **kwargs)
 
     def _get_needed_resources(self):
         resources = []
