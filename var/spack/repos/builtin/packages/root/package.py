@@ -34,13 +34,11 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern.ch/download/root_v6.09.02.source.tar.gz"
 
-    # Development versions
-    version('6.13.02', 'a64428a9073f2a95bf7cff120982da15')
-
     # Production versions
-    version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605', preferred=True)
+    version('6.14.00', '3613c930589734531ac8995486d41af5')
 
     # Old versions
+    version('6.12.06', 'bef6535a5d0cdf471b550da45a10f605')
     version('6.12.04', '8529b4c4e2befe8bdaa343a8e5d7534c')
     version('6.12.02', 'a46d67cf473f2137b5a3a9849f8170da')
     version('6.10.08', '48f5044e9588d94fb2d79389e48e1d73')
@@ -71,7 +69,7 @@ class Root(CMakePackage):
 
     patch('format-stringbuf-size.patch', level=0)
     patch('find-mysql.patch', level=1)
-    patch('honor-unuran-switch.patch', level=1)
+    patch('honor-unuran-switch.patch', level=1, when='@:6.13.99')
 
     if sys.platform == 'darwin':
         patch('math_uint.patch', when='@6.06.02')
