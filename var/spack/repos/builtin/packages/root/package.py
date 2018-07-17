@@ -122,8 +122,6 @@ class Root(CMakePackage):
     depends_on('xz')
     depends_on('zlib')
 
-    extends('python', when='+python')
-
     # Per correspondence on root-planning@cern.ch list, 2018-05-02/03.
     conflicts('%intel', when='cxxstd=17')
     conflicts('%intel@:16.99', when='cxxstd=14')
@@ -250,6 +248,9 @@ class Root(CMakePackage):
         return args
 
     def setup_environment(self, spack_env, run_env):
+        run_env.set('ROOTSYS', self.prefix)
+        run_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
+        run_env.prepend_path('PYTHONPATH', self.prefix.lib)
         if 'lz4' in self.spec:
             spack_env.append_path('CMAKE_PREFIX_PATH',
                                   self.spec['lz4'].prefix)
@@ -258,3 +259,6 @@ class Root(CMakePackage):
         spack_env.set('ROOTSYS', self.prefix)
         spack_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
+        run_env.set('ROOTSYS', self.prefix)
+        run_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
+        run_env.prepend_path('PYTHONPATH', self.prefix.lib)
