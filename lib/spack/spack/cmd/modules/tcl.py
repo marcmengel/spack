@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,23 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-from spack.cmd.common import print_module_placeholder_help, arguments
+import functools
 
-description = "add package to environment using `module load`"
-section = "environment"
-level = "short"
+import spack.cmd.modules
 
 
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package to load with modules "
+def add_command(parser, command_dict):
+    tcl_parser = parser.add_parser(
+        'tcl', help='manipulate non-hierarchical module files'
     )
-    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
+    spack.cmd.modules.setup_parser(tcl_parser)
 
-
-def load(parser, args):
-    print_module_placeholder_help()
+    command_dict['tcl'] = functools.partial(
+        spack.cmd.modules.modules_cmd, module_type='tcl'
+    )

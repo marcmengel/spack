@@ -22,23 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-from spack.cmd.common import print_module_placeholder_help, arguments
+import spack.spec
+from spack.main import SpackCommand
 
-description = "add package to environment using `module load`"
-section = "environment"
-level = "short"
+spec = SpackCommand('spec')
 
 
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package to load with modules "
-    )
-    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
+def test_spec(mock_packages, config):
+    output = spec('mpileaks')
+
+    assert 'mpileaks@2.3' in output
+    assert 'callpath@1.0' in output
+    assert 'dyninst@8.2' in output
+    assert 'libdwarf@20130729' in output
+    assert 'libelf@0.8.1' in output
+    assert 'mpich@3.0.4' in output
 
 
-def load(parser, args):
-    print_module_placeholder_help()
+def test_spec_yaml(mock_packages, config):
+    output = spec('--yaml', 'mpileaks')
+
+    mpileaks = spack.spec.Spec.from_yaml(output)
+    assert 'mpileaks' in mpileaks
+    assert 'callpath' in mpileaks
+    assert 'dyninst' in mpileaks
+    assert 'libdwarf' in mpileaks
+    assert 'libelf' in mpileaks
+    assert 'mpich' in mpileaks
