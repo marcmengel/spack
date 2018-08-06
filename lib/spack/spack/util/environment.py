@@ -31,6 +31,10 @@ try:
     from itertools import izip as iterzip
 except ImportError:
     iterzip = zip
+try:
+    from pipes import quote as cmd_quote
+except ImportError:
+    from shlex import quote as cmd_quote
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -112,4 +116,4 @@ def dump_environment(path):
     """Dump the current environment out to a file."""
     with open(path, 'w') as env_file:
         for key, val in sorted(os.environ.items()):
-            env_file.write('export %s="%s"\n' % (key, val))
+            env_file.write('export %s=%s\n' % (key, cmd_quote(val)))
