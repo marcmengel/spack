@@ -126,6 +126,10 @@ packages. If neither are chosen, don't run tests for any packages."""
         default=None,
         help="CDash URL where reports will be uploaded"
     )
+    subparser.add_argument(
+        '--exclude',
+        help='comma-separated list of dependencies to exclude from installation.'
+    )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
@@ -148,7 +152,9 @@ def install_spec(cli_args, kwargs, spec):
             # for root (explicit=False in the DB)
             kwargs['explicit'] = False
             for s in spec.dependencies():
-                s.package.do_install(**kwargs)
+                if not (cli_args.exclude and \
+                        s.name in cli_args.exclude.split(',')):
+                    s.package.do_install(**kwargs)
         else:
             kwargs['explicit'] = True
             spec.package.do_install(**kwargs)
