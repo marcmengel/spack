@@ -23,9 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import re
 import itertools
 from six import iteritems
 from operator import itemgetter
+import cPickle
 # TODO: This would be easier if we could import builtins in Python2.
 try:
     from itertools import izip as iterzip
@@ -112,8 +114,23 @@ def path_put_first(var_name, directories):
     path_set(var_name, new_path)
 
 
-def dump_environment(path):
-    """Dump the current environment out to a file."""
+bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
+def env_var_to_source_line(var, val):
+    source_line = 'function {fname}{decl}; export -f {fname}'.\
+                  format(fname=bash_function_finder.sub(r'\1', var),
+                         decl=val) if var.startswith('BASH_FUNC') else \
+                  '{var}={val}; export {var}'.format(var=var,
+                                                     val=cmd_quote(val))
+    return source_line
+
+
+def dump_environment(path, environment=os.environ):
+    """Dump an environment dictionary to a source-able file."""
     with open(path, 'w') as env_file:
-        for key, val in sorted(os.environ.items()):
-            env_file.write('export %s=%s\n' % (key, cmd_quote(val)))
+        for var, val in sorted(environment.items()):
+            env_file.write('{0}\n'.format(env_var_to_source_line(var, val)))
+
+
+def pickle_environment(path, environment=os.environ):
+    """Pickle an environment dictionary to a file."""
+    cPickle.dump(dict(environment), open(path, 'wb'), protocol=2)
