@@ -26,7 +26,9 @@ import os
 import re
 import itertools
 from six import iteritems
-from six.moves import zip as iterzip, shlex_quote as cmd_quote, cPickle
+from six.moves import zip as iterzip
+from six.moves import shlex_quote as cmd_quote
+from six.moves import cPickle
 from operator import itemgetter
 
 
