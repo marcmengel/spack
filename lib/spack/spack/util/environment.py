@@ -26,17 +26,9 @@ import os
 import re
 import itertools
 from six import iteritems
+from six.moves import zip as iterzip, shlex_quote as cmd_quote, cPickle
 from operator import itemgetter
-import cPickle
-# TODO: This would be easier if we could import builtins in Python2.
-try:
-    from itertools import izip as iterzip
-except ImportError:
-    iterzip = zip
-try:
-    from pipes import quote as cmd_quote
-except ImportError:
-    from shlex import quote as cmd_quote
+
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
