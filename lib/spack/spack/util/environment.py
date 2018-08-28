@@ -64,11 +64,17 @@ def deprioritize_system_paths(paths):
     return filter_system_paths(paths) + system_paths(paths)
 
 
+# Necessary to accommodate Python 2.6. When support is dropped, replace
+# _count with with itertools.count().
+def _count(start=0, step=1):
+    for i in itertools.count():
+        yield start + i * step
+
+
 def prune_duplicate_paths(paths):
     """Returns the paths with duplicates removed, order preserved."""
     return [key for key, value in
-            sorted(iteritems(dict(iterzip(reversed(paths),
-                                          itertools.count(0, -1)))),
+            sorted(iteritems(dict(iterzip(reversed(paths), _count(0, -1)))),
                    key=itemgetter(1))]
 
 
