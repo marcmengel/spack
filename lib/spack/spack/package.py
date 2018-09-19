@@ -45,6 +45,7 @@ import time
 from six import StringIO
 from six import string_types
 from six import with_metaclass
+from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
 
@@ -487,24 +488,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         except ValueError as e:
             raise ValueError("In package %s: %s" % (self.name, e.message))
 
-        # stage used to build this package.
-        self._stage = None
-
-        # Init fetch strategy and url to None
-        self._fetcher = None
-        self.url = getattr(self.__class__, 'url', None)
-
-        # Fix up self.url if this package fetches with a URLFetchStrategy.
-        # This makes self.url behave sanely.
-        if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type
-            # TODO: of fetch to do. figure out a more sane fetch
-            # TODO: strategy/package init order (right now it's conflated with
-            # TODO: stage, package, and the tests make assumptions)
-            f = fs.for_package_version(self, self.version)
-            if isinstance(f, fs.URLFetchStrategy):
-                self.url = self.url_for_version(self.spec.version)
-
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = None
@@ -512,14 +495,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 0
 
-        # Set up some internal variables for timing.
+        # init internal variables
+        self._stage = None
+        self._fetcher = None
+
+        # Set up timing variables
         self._fetch_time = 0.0
         self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
-
-        self.extra_args = {}
 
         super(PackageBase, self).__init__()
 
@@ -588,17 +573,46 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @memoized
     def version_urls(self):
-        """Return a list of URLs for different versions of this
-           package, sorted by version.  A version's URL only appears
-           in this list if it has an explicitly defined URL."""
-        version_urls = {}
-        for v in sorted(self.versions):
-            args = self.versions[v]
+        """OrderedDict of explicitly defined URLs for versions of this package.
+
+        Return:
+           An OrderedDict (version -> URL) different versions of this
+           package, sorted by version.
+
+        A version's URL only appears in the result if it has an an
+        explicitly defined ``url`` argument. So, this list may be empty
+        if a package only defines ``url`` at the top level.
+        """
+        version_urls = OrderedDict()
+        for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
         return version_urls
 
-    # TODO: move this out of here and into some URL extrapolation module?
+    def nearest_url(self, version):
+        """Finds the URL with the "closest" version to ``version``.
+
+        This uses the following precedence order:
+
+          1. Find the next lowest or equal version with a URL.
+          2. If no lower URL, return the next *higher* URL.
+          3. If no higher URL, return None.
+
+        """
+        version_urls = self.version_urls()
+
+        if version in version_urls:
+            return version_urls[version]
+
+        last_url = None
+        for v, u in self.version_urls().items():
+            if v > version:
+                if last_url:
+                    return last_url
+            last_url = u
+
+        return last_url
+
     def url_for_version(self, version):
         """Returns a URL from which the specified version of this package
         may be downloaded.
@@ -611,17 +625,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not isinstance(version, Version):
             version = Version(version)
 
-        cls = self.__class__
-        if not (hasattr(cls, 'url') or self.version_urls()):
-            raise NoURLError(cls)
-
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
         if version in version_urls:
             return version_urls[version]
 
-        # If we have no idea, substitute the version into the default URL.
-        default_url = getattr(self.__class__, 'url', None)
+        # If no specific URL, use the default, class-level URL
+        default_url = getattr(self, 'url', None)
+
+        # if no exact match AND no class-level default, use the nearest URL
+        if not default_url:
+            default_url = self.nearest_url(version)
+
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
@@ -1121,6 +1140,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dump_packages(self.spec, packages_dir)
 
     def _has_make_target(self, target):
+        """Checks to see if 'target' is a valid target in a Makefile.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
+
         make = inspect.getmodule(self).make
 
         # Check if we have a Makefile
@@ -1131,42 +1159,61 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.msg('No Makefile found in the build directory')
             return False
 
-        # Check if 'target' is a valid target
+        # Check if 'target' is a valid target.
         #
-        # -q, --question
-        #       ``Question mode''. Do not run any commands, or print anything;
-        #       just return an exit status that is zero if the specified
-        #       targets are already up to date, nonzero otherwise.
+        # `make -n target` performs a "dry run". It prints the commands that
+        # would be run but doesn't actually run them. If the target does not
+        # exist, you will see one of the following error messages:
         #
-        # https://www.gnu.org/software/make/manual/html_node/Options-Summary.html
+        # GNU Make:
+        #     make: *** No rule to make target `test'.  Stop.
+        #           *** No rule to make target 'test'.  Stop.
         #
-        # The exit status of make is always one of three values:
-        #
-        # 0     The exit status is zero if make is successful.
-        #
-        # 2     The exit status is two if make encounters any errors.
-        #       It will print messages describing the particular errors.
-        #
-        # 1     The exit status is one if you use the '-q' flag and make
-        #       determines that some target is not already up to date.
-        #
-        # https://www.gnu.org/software/make/manual/html_node/Running.html
-        #
-        # NOTE: This only works for GNU Make, not NetBSD Make.
-        make('-q', target, fail_on_error=False)
-        if make.returncode == 2:
-            tty.msg("Target '" + target + "' not found in " + makefile)
-            return False
+        # BSD Make:
+        #     make: don't know how to make test. Stop
+        missing_target_msgs = [
+            "No rule to make target `{0}'.  Stop.",
+            "No rule to make target '{0}'.  Stop.",
+            "don't know how to make {0}. Stop",
+        ]
+
+        kwargs = {
+            'fail_on_error': False,
+            'output': os.devnull,
+            'error': str,
+        }
+
+        stderr = make('-n', target, **kwargs)
+
+        for missing_target_msg in missing_target_msgs:
+            if missing_target_msg.format(target) in stderr:
+                tty.msg("Target '" + target + "' not found in " + makefile)
+                return False
 
         return True
 
     def _if_make_target_execute(self, target, *args, **kwargs):
+        """Runs ``make target`` if 'target' is a valid target in the Makefile.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
         if self._has_make_target(target):
             # Execute target
             inspect.getmodule(self).make(target, *args, **kwargs)
 
     def _has_ninja_target(self, target):
+        """Checks to see if 'target' is a valid target in a Ninja build script.
+
+        Parameters:
+            target (str): the target to check for
+
+        Returns:
+            bool: True if 'target' is found, else False
+        """
+
         ninja = inspect.getmodule(self).ninja
+
         # Check if we have a Ninja build script
         if not os.path.exists('build.ninja'):
             tty.msg('No Ninja build script found in the build directory')
@@ -1174,7 +1221,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
-        all_targets = ninja('-t', 'targets', output=str).split('\n')
+        all_targets = ninja('-t', 'targets', 'all', output=str).split('\n')
 
         # Check if 'target' is a valid target
         matches = [line for line in all_targets
@@ -1187,6 +1234,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return True
 
     def _if_ninja_target_execute(self, target, *args, **kwargs):
+        """Runs ``ninja target`` if 'target' is a valid target in the Ninja
+        build script.
+
+        Parameters:
+            target (str): the target to potentially execute
+        """
         if self._has_ninja_target(target):
             # Execute target
             inspect.getmodule(self).ninja(target, *args, **kwargs)
@@ -1906,8 +1959,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         activate() directly.
         """
         if verbose:
-            tty.msg("Activating extension %s for %s" %
-                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg('Activating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         self._sanity_check_extension()
         if not view:
@@ -1933,10 +1986,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Activated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Activated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1964,8 +2015,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
-        verbose = kwargs.get("verbose", True)
-        remove_dependents = kwargs.get("remove_dependents", False)
+        verbose = kwargs.get('verbose', True)
+        remove_dependents = kwargs.get('remove_dependents', False)
+
+        if verbose:
+            tty.msg('Deactivating extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
         if not view:
             view = YamlFilesystemView(
@@ -1988,11 +2043,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         if remove_dependents:
                             aspec.package.do_deactivate(**kwargs)
                         else:
-                            msg = ("Cannot deactivate %s because %s is "
-                                   "activated and depends on it.")
-                            raise ActivationError(
-                                msg % (self.spec.cshort_spec,
-                                       aspec.cshort_spec))
+                            msg = ('Cannot deactivate {0} because {1} is '
+                                   'activated and depends on it')
+                            raise ActivationError(msg.format(
+                                self.spec.cshort_spec, aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
             self, view, **self.extendee_args)
@@ -2004,10 +2058,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self.extendee_spec, self.spec)
 
         if verbose:
-            tty.msg(
-                "Deactivated extension %s for %s" %
-                (self.spec.short_spec,
-                 self.extendee_spec.cformat("$_$@$+$%@")))
+            tty.debug('Deactivated extension {0} for {1}'.format(
+                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
 
     def deactivate(self, extension, view, **kwargs):
         """
@@ -2051,8 +2103,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def all_urls(self):
+        """A list of all URLs in a package.
+
+        Check both class-level and version-specific URLs.
+
+        Returns:
+            list: a list of URLs
+        """
         urls = []
-        if self.url:
+        if hasattr(self, 'url') and self.url:
             urls.append(self.url)
 
         for args in self.versions.values():
@@ -2061,10 +2120,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return urls
 
     def fetch_remote_versions(self):
-        """Try to find remote versions of this package using the
-           list_url and any other URLs described in the package file."""
+        """Find remote versions of this package.
+
+        Uses ``list_url`` and any other URLs listed in the package file.
+
+        Returns:
+            dict: a dictionary mapping versions to URLs
+        """
         if not self.all_urls:
-            raise spack.util.web.VersionFetchError(self.__class__)
+            return {}
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2268,7 +2332,6 @@ class ExternalPackageError(InstallError):
 
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
-
     def __init__(self, spec, dependents):
         super(PackageStillNeededError, self).__init__("Cannot uninstall %s" %
                                                       spec)
@@ -2278,14 +2341,12 @@ class PackageStillNeededError(InstallError):
 
 class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
-
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
 
 
 class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
-
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
@@ -2301,19 +2362,17 @@ class NoURLError(PackageError):
 
 
 class ExtensionError(PackageError):
-
-    pass
+    """Superclass for all errors having to do with extension packages."""
 
 
 class ActivationError(ExtensionError):
-
+    """Raised when there are problems activating an extension."""
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
-
     def __init__(self, conflict):
         super(DependencyConflictError, self).__init__(
             "%s conflicts with another file in the flattened directory." % (

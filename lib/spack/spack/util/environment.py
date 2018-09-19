@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import contextlib
 import os
 import re
 import itertools
@@ -136,3 +137,30 @@ def dump_environment(path, environment=os.environ):
 def pickle_environment(path, environment=os.environ):
     """Pickle an environment dictionary to a file."""
     cPickle.dump(dict(environment), open(path, 'wb'), protocol=2)
+
+
+@contextlib.contextmanager
+def set_env(**kwargs):
+    """Temporarily sets and restores environment variables.
+
+    Variables can be set as keyword arguments to this function.
+    """
+    saved = {}
+    for var, value in kwargs.items():
+        if var in os.environ:
+            saved[var] = os.environ[var]
+
+        if value is None:
+            if var in os.environ:
+                del os.environ[var]
+        else:
+            os.environ[var] = value
+
+    yield
+
+    for var, value in kwargs.items():
+        if var in saved:
+            os.environ[var] = saved[var]
+        else:
+            if var in os.environ:
+                del os.environ[var]

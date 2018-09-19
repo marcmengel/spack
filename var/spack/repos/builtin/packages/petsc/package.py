@@ -35,12 +35,13 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    git      = "https://bitbucket.org/petsc/petsc.git"
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', branch='master')
-    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
+    version('develop', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
@@ -185,8 +186,12 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
             ]
+            if self.spec.satisfies('%intel'):
+                # mpiifort needs some help to automatically link
+                # all necessary run-time libraries
+                compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -225,8 +230,9 @@ class Petsc(Package):
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # PETSc depends on scalapack when '+mumps+mpi~int64' (see depends())
+        # help PETSc pick up Scalapack from MKL
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
