@@ -112,7 +112,7 @@ class Root(CMakePackage):
     depends_on('openssl')
     depends_on('pcre')
     depends_on('postgresql-c')
-    depends_on('pythia6', when='+pythia6')
+    depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8', when='+pythia8')
     depends_on('python@2.7:')
     depends_on('sqlite')
