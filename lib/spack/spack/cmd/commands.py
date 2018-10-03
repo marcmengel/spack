@@ -112,7 +112,7 @@ def rst(args):
 
 @formatter
 def names(args):
-    for cmd in spack.cmd.all_commands():
+    for cmd in spack.main.all_commands():
         print(cmd)
 
 
