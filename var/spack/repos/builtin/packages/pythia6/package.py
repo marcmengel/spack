@@ -1,30 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import numbers
 import os
 from six import iteritems
 from six.moves.urllib.parse import urlparse
+
+
+def _is_integral(x):
+    """Accepts only integral values."""
+    try:
+        return isinstance(int(x), numbers.Integral) and \
+            (not isinstance(x, bool)) and \
+            int(x) == x
+    except ValueError:
+        return False
 
 
 class Pythia6(CMakePackage):
@@ -44,8 +37,15 @@ class Pythia6(CMakePackage):
     version('6.4.28',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
 
+    # Root's TPythia6 interface requires extra sources to be built into
+    # the Pythia6 library.
     variant('root', default=False,
             description='Build extra (non OEM) code to allow use by Root.')
+
+    # The maximum number of particles (NMXHEP) supported by the arrays
+    # in the /HEPEVT/ COMMON block may need tweaking if pythia6 is
+    # intended to be used with other code with different requirements.
+    variant('nmxhep', default=4000, values=_is_integral, description='Extent of particle arrays in the /HEPEVT/ COMMON block.')
 
     # In the unlikely event of new versions >6.4.28,
     # pythia6_common_address.c should be checked for accuracy against
@@ -131,13 +131,23 @@ class Pythia6(CMakePackage):
                  placement={doc: doc}
              )
 
+    # The included patch customizes some routines provided in dummy form
+    # by the original source to be useful out of the box in the vast
+    # majority of cases. If your case is different, platform- or
+    # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
 
     def patch(self):
-        # Use our provided CMakeLists.txt
+        # Use our provided CMakeLists.txt. The Makefile provided with
+        # the source is GCC (gfortran) specific, and would have required
+        # additional patching for the +root variant.
         llnl.util.filesystem.copy(os.path.join(os.path.dirname(__file__),
                                                'CMakeLists.txt'),
                                   self.stage.source_path)
+        # Apply the variant value at the relevant place in the source.
+        filter_file(r'^(\s+PARAMETER\s*\(\s*NMXHEP\s*=\s*)\d+',
+                    r'\1{0}'.format(self.spec.variants['nmxhep'].value),
+                    'pyhepc.f')
 
     def cmake_args(self):
         args = ['-DPYTHIA6_VERSION={0}'.format(self.version.dotted)]
