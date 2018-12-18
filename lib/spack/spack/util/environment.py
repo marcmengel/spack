@@ -97,8 +97,6 @@ def path_put_first(var_name, directories):
 
 
 bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
-
-
 def env_var_to_source_line(var, val):
     source_line = 'function {fname}{decl}; export -f {fname}'.\
                   format(fname=bash_function_finder.sub(r'\1', var),
