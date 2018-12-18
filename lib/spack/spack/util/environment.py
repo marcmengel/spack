@@ -13,7 +13,6 @@ from six.moves import shlex_quote as cmd_quote
 from six.moves import cPickle
 from operator import itemgetter
 
-
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
