@@ -507,7 +507,9 @@ def mock_archive(tmpdir_factory):
         tar('-czf', archive_name, repo_name)
 
     Archive = collections.namedtuple('Archive',
-                                     ['url', 'path', 'archive_file'])
+                                     ['url', 'path', 'archive_file',
+                                      'repo_name'])
+
     archive_file = str(tmpdir.join(archive_name))
 
     # Return the url
