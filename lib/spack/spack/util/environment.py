@@ -3,15 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+"""Utilities for setting and modifying environment variables."""
+import collections
 import contextlib
+import inspect
+import json
 import os
 import re
-import itertools
-from six import iteritems
-from six.moves import zip as iterzip
-from six.moves import shlex_quote as cmd_quote
-from six.moves import cPickle
-from operator import itemgetter
+import sys
+import os.path
+import subprocess
+
+import llnl.util.tty as tty
+
+from llnl.util.lang import dedupe
 
 
 system_paths = ['/', '/usr', '/usr/local']
