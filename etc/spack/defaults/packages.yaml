@@ -41,6 +41,12 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
+      mariadb-c: [mariadb-c-client]
+      mysql-c: [mariadb-c-client]
+      postgresql-c: [postgresql-client]
+      postgresql-perl: [postgresql-client]
+      postgresql-python: [postgresql-client]
+      postgresql-tcl: [postgresql-client]
     permissions:
       read: world
       write: user
