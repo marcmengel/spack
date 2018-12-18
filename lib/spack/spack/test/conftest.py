@@ -23,7 +23,7 @@ import spack.config
 import spack.caches
 import spack.database
 import spack.directory_layout
-import spack.package_prefs
+import spack.environment as ev
 import spack.paths
 import spack.platforms.test
 import spack.repo
@@ -36,6 +36,27 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+#
+# Disable any activate Spack environment BEFORE all tests
+#
+@pytest.fixture(scope='session', autouse=True)
+def clean_user_environment():
+    env_var = ev.spack_env_var in os.environ
+    active = ev._active_environment
+
+    if env_var:
+        spack_env_value = os.environ.pop(ev.spack_env_var)
+    if active:
+        ev.deactivate()
+
+    yield
+
+    if env_var:
+        os.environ[ev.spack_env_var] = spack_env_value
+    if active:
+        ev.activate(active)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -97,7 +118,7 @@ def mock_stage(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def ignore_stage_files():
+def _ignore_stage_files():
     """Session-scoped helper for check_for_leftover_stage_files.
 
     Used to track which leftover files in the stage have been seen.
@@ -117,7 +138,7 @@ def remove_whatever_it_is(path):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
+def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
     """Ensure that each test leaves a clean stage when done.
 
     This can be disabled for tests that are expected to dirty the stage
@@ -132,7 +153,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     files_in_stage = set()
     if os.path.exists(spack.paths.stage_path):
         files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - ignore_stage_files
+            os.listdir(spack.paths.stage_path)) - _ignore_stage_files
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
@@ -140,7 +161,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
             path = os.path.join(spack.paths.stage_path, f)
             remove_whatever_it_is(path)
     else:
-        ignore_stage_files |= files_in_stage
+        _ignore_stage_files |= files_in_stage
         assert not files_in_stage
 
 
@@ -255,9 +276,12 @@ def config(configuration_dir):
 
     real_configuration = spack.config.config
 
-    spack.config.config = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-          for name in ['site', 'system', 'user']])
+    test_scopes = [
+        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+        for name in ['site', 'system', 'user']]
+    test_scopes.append(spack.config.InternalConfigScope('command_line'))
+
+    spack.config.config = spack.config.Configuration(*test_scopes)
 
     yield spack.config.config
 
@@ -285,8 +309,22 @@ def mutable_config(tmpdir_factory, configuration_dir, config):
     spack.package_prefs.PackagePrefs.clear_caches()
 
 
+@pytest.fixture()
+def mock_config(tmpdir):
+    """Mocks two configuration scopes: 'low' and 'high'."""
+    real_configuration = spack.config.config
+
+    spack.config.config = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
+          for name in ['low', 'high']])
+
+    yield spack.config.config
+
+    spack.config.config = real_configuration
+
+
 def _populate(mock_db):
-    """Populate a mock database with packages.
+    r"""Populate a mock database with packages.
 
     Here is what the mock DB looks like:
 
@@ -468,8 +506,7 @@ def mock_archive(tmpdir_factory):
         tar('-czf', archive_name, repo_name)
 
     Archive = collections.namedtuple('Archive',
-                                     ['url', 'path', 'archive_file',
-                                      'repo_name'])
+                                     ['url', 'path', 'archive_file'])
     archive_file = str(tmpdir.join(archive_name))
 
     # Return the url
@@ -478,7 +515,6 @@ def mock_archive(tmpdir_factory):
         archive_file=archive_file,
         path=str(repodir),
         repo_name=repo_name)
-
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
@@ -661,6 +697,15 @@ def mock_svn_repository(tmpdir_factory):
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
+
+
+@pytest.fixture()
+def mutable_mock_env_path(tmpdir_factory):
+    """Fixture for mocking the internal spack environments directory."""
+    saved_path = spack.environment.env_path
+    spack.environment.env_path = str(tmpdir_factory.mktemp('mock-env-path'))
+    yield spack.environment.env_path
+    spack.environment.env_path = saved_path
 
 
 ##########
