@@ -120,6 +120,6 @@ def test_dump_environment(tmpdir):
     dumpfile_path = str(tmpdir.join('envdump.txt'))
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, 'r') as dumpfile:
-        assert('export TEST_ENV_VAR="{0}"\n'.format(test_paths)
+        assert('TEST_ENV_VAR={0}; export TEST_ENV_VAR\n'.format(test_paths)
                in list(dumpfile))
     del os.environ['TEST_ENV_VAR']
