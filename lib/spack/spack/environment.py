@@ -107,13 +107,6 @@ def activate(env, use_env_repo=False):
 
     tty.debug("Using environmennt '%s'" % _active_environment.name)
 
-    def execute(self):
-        environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(
-            self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
-        os.environ[self.name] = self.separator.join(directories)
 
 def deactivate():
     """Undo any configuration or repo settings modified by ``activate()``.
