@@ -12,14 +12,26 @@ import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+from spack.util.environment import dump_environment, pickle_environment
 
-description = "show install environment for a spec, and run commands"
+description = "run a command in a spec's install environment, " \
+              "or dump its environment to screen or file"
 section = "build"
 level = "long"
 
 
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    subparser.add_argument(
+        '--dump', action='store_true', default=False,
+        help="instead of a command, last argument specifies a file to which "
+        "to write a source-able script to replicate the environment."
+    )
+    subparser.add_argument(
+        '--pickle', action='store_true', default=False,
+        help="instead of a command, last argument is a file to which to write "
+        "a pickled environment dictionary."
+    )
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs of package environment to emulate")
@@ -48,8 +60,21 @@ def build_env(parser, args):
     spec = specs[0]
 
     build_environment.setup_package(spec.package, args.dirty)
+    if args.dump:
+        if cmd and len(cmd) == 1:
+            dump_environment(cmd[0])
+        else:
+            tty.die("--dump requires a single file to which to dump "
+                    "the environment")
 
-    if not cmd:
+    elif args.pickle:
+        if cmd and len(cmd) == 1:
+            pickle_environment(cmd[0])
+        else:
+            tty.die("--dump requires a single file to which to dump "
+                    "the environment")
+
+    elif not cmd:
         # If no command act like the "env" command and print out env vars.
         for key, val in os.environ.items():
             print("%s=%s" % (key, val))
