@@ -301,26 +301,22 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
     if platform.system() == 'Darwin':
         for path_name in path_names:
             (rpaths, deps, idpath) = macho_get_paths(path_name)
-            # new style buildaches with placeholder in binaries
-            if (deps[0].startswith(placeholder) or
-                rpaths[0].startswith(placeholder) or
-                (idpath and idpath.startswith(placeholder))):
-                (new_rpaths,
-                 new_deps,
-                 new_idpath) = macho_replace_paths(placeholder,
-                                                   new_dir,
-                                                   rpaths,
-                                                   deps,
-                                                   idpath)
-            # old style buildcaches with original install root in binaries
-            else:
-                (new_rpaths,
-                 new_deps,
-                 new_idpath) = macho_replace_paths(old_dir,
-                                                   new_dir,
-                                                   rpaths,
-                                                   deps,
-                                                   idpath)
+            #one pass to replace placeholder
+            (n_rpaths,
+             n_deps,
+             n_idpath) = macho_replace_paths(placeholder,
+                                               new_dir,
+                                               rpaths,
+                                               deps,
+                                               idpath)
+            #another pass to replace old_dir 
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_replace_paths(old_dir,
+                                               new_dir,
+                                               n_rpaths,
+                                               n_deps,
+                                               n_idpath)
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
@@ -333,15 +329,12 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
             if orig_rpaths:
-                if orig_rpaths[0].startswith(placeholder):
-                    # new style buildaches with placeholder in binaries
-                    new_rpaths = substitute_rpath(orig_rpaths,
-                                                  placeholder, new_dir)
-                else:
-                    # old style buildcaches with original install
-                    # root in binaries
-                    new_rpaths = substitute_rpath(orig_rpaths,
-                                                  old_dir, new_dir)
+                #one pass to replace placeholder
+                n_rpaths = substitute_rpath(orig_rpaths,
+                                              placeholder, new_dir)
+                #one pass to replace old_dir 
+                new_rpaths = substitute_rpath(n_rpaths,
+                                              old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
                 if (not allow_root and
                     old_dir != new_dir and
