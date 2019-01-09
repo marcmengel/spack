@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -179,9 +179,9 @@ class TestConcretize(object):
                       ' ^cmake %clang@3.5 platform=test os=fe target=fe')
         client.concretize()
         cmake = client['cmake']
-        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(client.compiler_flags['cflags']) == set(['-O0', '-g'])
         assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
-        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0', '-g'])
         assert not set(cmake.compiler_flags['fflags'])
 
     def test_architecture_inheritance(self):

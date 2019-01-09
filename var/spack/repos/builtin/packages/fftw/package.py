@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,6 +71,9 @@ class Fftw(AutotoolsPackage):
     depends_on('libtool', type='build', when='+pfft_patches')
     # https://github.com/FFTW/fftw3/commit/902d0982522cdf6f0acd60f01f59203824e8e6f3
     conflicts('%gcc@8:8.9999', when="@3.3.7")
+
+    provides('fftw-api@2', when='@2.1.5')
+    provides('fftw-api@3', when='@3:')
 
     @property
     def libs(self):

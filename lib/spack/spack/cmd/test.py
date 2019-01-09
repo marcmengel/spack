@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,7 @@ def setup_parser(subparser):
     list_group.add_argument(
         '-L', '--long-list', action='store_true', default=False,
         help="list the entire hierarchy of tests")
+ 
     subparser.add_argument(
         '--extension', default=None,
         help="run test for a given Spack extension"

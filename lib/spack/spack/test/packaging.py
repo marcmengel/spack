@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -197,6 +197,9 @@ echo $PATH"""
     spack.config.set('mirrors', mirrors)
     shutil.rmtree(mirror_path)
     stage.destroy()
+
+    # Remove cached binary specs since we deleted the mirror
+    bindist._cached_specs = None
 
 
 def test_relocate_text(tmpdir):

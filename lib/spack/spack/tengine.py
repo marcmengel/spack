@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -79,7 +79,6 @@ def make_environment(dirs=None):
         extensions = [os.path.join(x, 'templates') for x in extension_dirs]
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
-
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine

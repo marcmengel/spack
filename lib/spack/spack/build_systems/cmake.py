@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,8 +115,7 @@ class CMakePackage(PackageBase):
         if primary_generator not in valid_generators:
             msg  = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
-            msg += "primary generators: '{0}'".\
-                   format("', '".join(valid_generators))
+            msg += "primary generators: '{0}'".format("', '".join(valid_generators))
             raise InstallError(msg)
 
         try:

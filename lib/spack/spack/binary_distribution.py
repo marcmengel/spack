@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
     """
+
     def __init__(self, file_path):
         err_msg = "\n%s\nexists\n" % file_path
         err_msg += "Use -f option to overwrite."
@@ -55,6 +56,7 @@ class PickKeyException(spack.error.SpackError):
     """
     Raised when multiple keys can be used to sign.
     """
+
     def __init__(self, keys):
         err_msg = "Multi keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
@@ -269,7 +271,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    install_tree(spec.prefix, workdir, symlinks=True)
+    # set symlinks=False here to avoid broken symlinks when archiving and
+    # moving the package
+    install_tree(spec.prefix, workdir, symlinks=False)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -285,7 +289,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             tty.die(str(e))
     else:
         try:
-            make_package_placeholder(workdir, allow_root)
+            make_package_placeholder(workdir, spec.prefix, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
@@ -377,7 +381,7 @@ def make_package_relative(workdir, prefix, allow_root):
                                   old_path, allow_root)
 
 
-def make_package_placeholder(workdir, allow_root):
+def make_package_placeholder(workdir, prefix, allow_root):
     """
     Change paths in binaries to placeholder paths
     """
@@ -385,7 +389,7 @@ def make_package_placeholder(workdir, allow_root):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.make_binary_placeholder(cur_path_names, allow_root)
+    relocate.make_binary_placeholder(cur_path_names, prefix, allow_root)
 
 
 def relocate_package(workdir, allow_root):
@@ -396,6 +400,8 @@ def relocate_package(workdir, allow_root):
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
+    old_relative_prefix = buildinfo.get('relative_prefix', '')
+    old_prefix = os.path.join(old_path, old_relative_prefix)
     if rel:
         return
 
@@ -416,7 +422,7 @@ def relocate_package(workdir, allow_root):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         relocate.relocate_binary(path_names, old_path, new_path,
-                                 allow_root)
+                                 allow_root, old_prefix)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,
@@ -536,11 +542,12 @@ def get_specs(force=False):
         if url.startswith('file'):
             mirror = url.replace('file://', '') + '/build_cache'
             tty.msg("Finding buildcaches in %s" % mirror)
-            files = os.listdir(mirror)
-            for file in files:
-                if re.search('spec.yaml', file):
-                    link = 'file://' + mirror + '/' + file
-                    urls.add(link)
+            if os.path.exists(mirror):
+                files = os.listdir(mirror)
+                for file in files:
+                    if re.search('spec.yaml', file):
+                        link = 'file://' + mirror + '/' + file
+                        urls.add(link)
         else:
             tty.msg("Finding buildcaches on %s" % url)
             p, links = spider(url + "/build_cache")
@@ -586,14 +593,14 @@ def get_keys(install=False, trust=False, force=False):
             tty.msg("Finding public keys in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
-                if re.search('\.key', file):
+                if re.search(r'\.key', file):
                     link = 'file://' + mirror + '/' + file
                     keys.add(link)
         else:
             tty.msg("Finding public keys on %s" % url)
             p, links = spider(url + "/build_cache", depth=1)
             for link in links:
-                if re.search("\.key", link):
+                if re.search(r'\.key', link):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,12 +38,13 @@ import os
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
 
+import spack.environment as ev
 import spack.cmd
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
 
 description = "produce a single-rooted directory view of packages"
-section = "environment"
+section = "environments"
 level = "short"
 
 actions_link = ["symlink", "add", "soft", "hardlink", "hard"]
@@ -172,7 +173,8 @@ def view(parser, args):
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
-        specs = [spack.cmd.disambiguate_spec(s) for s in specs]
+        env = ev.get_env(args, 'view link')
+        specs = [spack.cmd.disambiguate_spec(s, env) for s in specs]
 
     elif args.action in actions_status:
         # no specs implies all
