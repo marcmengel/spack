@@ -120,8 +120,6 @@ def get_module(cmd_name):
     """
     pname = python_name(cmd_name)
     module = None
-    extensions = spack.config.get('config:extensions') or []
-    sys.path.extend(extensions)
 
     # Try to get the named top level command from Spack first, then from
     # any configured extensions.

@@ -617,6 +617,10 @@ def main(argv=None):
     if args.config_scopes:
         spack.config.command_line_scopes = args.config_scopes
 
+    # Add extension directories to system path.
+    extensions = spack.config.get('config:extensions') or []
+    sys.path.extend(extensions)
+
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))
         return 0
