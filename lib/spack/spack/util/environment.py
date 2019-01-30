@@ -117,16 +117,17 @@ def env_var_to_source_line(var, val):
     return source_line
 
 
-def dump_environment(path, environment=os.environ):
+def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
+    use_env = environment if environment else os.environ
     with open(path, 'w') as env_file:
-        for var, val in sorted(environment.items()):
+        for var, val in sorted(use_env.items()):
             env_file.write('{0}\n'.format(env_var_to_source_line(var, val)))
 
 
-def pickle_environment(path, environment=os.environ):
+def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
-    cPickle.dump(dict(environment), open(path, 'wb'), protocol=2)
+    cPickle.dump(dict(environment if environment else os.environ), open(path, 'wb'), protocol=2)
 
 
 @contextlib.contextmanager
