@@ -36,4 +36,7 @@ class LinuxDistro(OperatingSystem):
         else:
             version = version[0]
 
+        if 'centos' in distname or 'scientific' in distname:
+            distname = 'rhel'
+
         super(LinuxDistro, self).__init__(distname, version)
