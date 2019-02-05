@@ -52,6 +52,7 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
+
     def cmake_args(self):
         spec = self.spec
         cxxstdflg = ''
