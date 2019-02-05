@@ -54,7 +54,6 @@ class Clhep(CMakePackage):
 
 
     def cmake_args(self):
-        spec = self.spec
         cxxstdflg = ''
         if self.spec.variants['cxxstd'].value == '11':
             cxxstdflg = self.compiler.cxx11_flag
