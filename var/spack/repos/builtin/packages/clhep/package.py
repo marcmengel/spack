@@ -54,8 +54,6 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
-    root_cmakelists_dir = 'CLHEP'
-
     def cmake_args(self):
         cmake_args = ['-DCLHEP_BUILD_CXXSTD=-std=c++{0}'.format(
                       self.spec.variants['cxxstd'].value)]
