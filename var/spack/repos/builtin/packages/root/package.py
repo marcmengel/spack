@@ -111,6 +111,8 @@ class Root(CMakePackage):
 
     def cmake_args(self):
         options_on = [
+            'gsl_shared',
+            'mathmore',
             'fitsio',
             'fortran',
             'gminimal',
