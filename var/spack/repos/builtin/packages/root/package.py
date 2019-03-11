@@ -119,7 +119,10 @@ class Root(CMakePackage):
             'fail-on-missing',
             'mysql',
             'sqlite',
-            'x11'
+            'x11',
+            'opengl',
+            'minuit2',
+            'gdml'
         ]
         options_off = [
             'afs',
@@ -242,6 +245,10 @@ class Root(CMakePackage):
         spack_env.set('ROOTSYS', self.prefix)
         spack_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
+        spack_env.prepend_path('PATH', self.prefix.bin)
+        spack_env.append_path('CMAKE_MODULE_PATH', '{0}/cmake'
+                              .format(self.prefix))
         run_env.set('ROOTSYS', self.prefix)
         run_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+        run_env.prepend_path('PATH', self.prefix.bin)
