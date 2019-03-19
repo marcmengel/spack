@@ -89,7 +89,7 @@ class Root(CMakePackage):
     depends_on('libxml2~python', when='~python')
     depends_on('libxpm')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
-    depends_on('mysql-c')
+    depends_on('mysql-client')
     depends_on('openssl')
     depends_on('pcre')
     depends_on('postgresql-c')
@@ -228,9 +228,9 @@ class Root(CMakePackage):
                               '-DCMAKE_CXX_FLAGS={0}')])
 
         args.append('-Dcxx{0}=ON'.format(self.spec.variants['cxxstd'].value))
-        if 'mysql-c' in self.spec:
+        if 'mysql-client' in self.spec:
             args.append('-DCMAKE_PROGRAM_PATH={0}'.format(
-                os.path.join(self.spec['mysql-c'].prefix, 'bin')))
+                os.path.join(self.spec['mysql-client'].prefix, 'bin')))
         return args
 
     def setup_environment(self, spack_env, run_env):
