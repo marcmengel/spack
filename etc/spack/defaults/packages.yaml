@@ -43,10 +43,6 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
-      postgresql-c: [postgresql-client]
-      postgresql-perl: [postgresql-client]
-      postgresql-python: [postgresql-client]
-      postgresql-tcl: [postgresql-client]
     permissions:
       read: world
       write: user

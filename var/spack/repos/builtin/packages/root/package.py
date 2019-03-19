@@ -92,7 +92,7 @@ class Root(CMakePackage):
     depends_on('mysql-client')
     depends_on('openssl')
     depends_on('pcre')
-    depends_on('postgresql-c')
+    depends_on('postgresql')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8', when='+pythia8')
     depends_on('python@2.7:')
