@@ -6,6 +6,8 @@
 
 from spack import *
 import platform
+import os
+import glob
 
 
 class Geant4(CMakePackage):
@@ -19,10 +21,6 @@ class Geant4(CMakePackage):
 
     version('10.04', 'b84beeb756821d0c61f7c6c93a2b83de')
     version('10.03.p03', 'ccae9fd18e3908be78784dc207f2d73b')
-    version('10.02.p03', '2b887e66f0d41174016160707662a77b')
-    version('10.02.p02', '6aae1d0fc743b0edc358c5c8fbe48657')
-    version('10.02.p01', 'b81f7082a15f6a34b720b6f15c6289cfe4ddbbbdcef0dc52719f71fac95f7f1c')
-    version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
     variant('qt', default=False, description='Enable Qt support')
     variant('vecgeom', default=False, description='Enable vecgeom support')
@@ -125,7 +123,11 @@ class Geant4(CMakePackage):
         """Handle Geant4's unusual version string."""
         return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+    @run_before('cmake')
+    def make_data_links(self):
+        if '+data' in self.spec:
+            return
+        spec = self.spec
         version = self.version
         major = version[0]
         minor = version[1]
@@ -133,7 +135,25 @@ class Geant4(CMakePackage):
             patch = version[-1]
         else:
             patch = 0
-        data = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
+        datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
+        with working_dir(join_path(spec.prefix.share, datadir),
+                         create=True):
+            dirs = glob.glob('%s/%s/*' %
+                             (spec['geant4-data'].prefix.share, datadir))
+            for d in dirs:
+                target = os.readlink(d)
+                os.symlink(target, os.path.basename(target))
+
+    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+        spec = self.spec
+        version = self.version
+        major = version[0]
+        minor = version[1]
+        if len(version) > 2:
+            patch = version[-1]
+        else:
+            patch = 0
+        datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
         spack_env.append_path('CMAKE_MODULE_PATH',
                               '{0}/{1}/Modules'.format(
-                               self.prefix.lib64, data))
+                                  self.prefix.lib64, datadir))

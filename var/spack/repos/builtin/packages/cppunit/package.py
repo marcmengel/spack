@@ -22,22 +22,6 @@ class Cppunit(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         cxxstd = self.spec.variants['cxxstd'].value
-        cxxstdflag = ''
-        if cxxstd == '98':
-            cxxstdflag = self.compiler.cxx98_flag
-        elif cxxstd == '11':
-            cxxstdflag = self.compiler.cxx11_flag
-        elif cxxstd == '14':
-            cxxstdflag = self.compiler.cxx14_flag
-        elif cxxstd == '17':
-            cxxstdflag = self.compiler.cxx17_flag
-        elif cxxstd == 'default':
-            pass
-        else:
-            # The user has selected a (new?) legal value that we've
-            # forgotten to deal with here.
-            tty.die(
-                "INTERNAL ERROR: cannot accommodate unexpected variant ",
-                "cxxstd={0}".format(spec.variants['cxxstd'].value))
-
+        cxxstdflag = '' if cxxstd == 'default' else \
+                     getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         spack_env.append_flags('CXXFLAGS', cxxstdflag)
