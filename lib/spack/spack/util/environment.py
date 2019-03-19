@@ -108,6 +108,8 @@ def path_put_first(var_name, directories):
 
 
 bash_function_finder = re.compile(r'BASH_FUNC_(.*?)\(\)')
+
+
 def env_var_to_source_line(var, val):
     source_line = 'function {fname}{decl}; export -f {fname}'.\
                   format(fname=bash_function_finder.sub(r'\1', var),
@@ -127,7 +129,8 @@ def dump_environment(path, environment=None):
 
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
-    cPickle.dump(dict(environment if environment else os.environ), open(path, 'wb'), protocol=2)
+    cPickle.dump(dict(environment if environment else os.environ),
+                 open(path, 'wb'), protocol=2)
 
 
 @contextlib.contextmanager
@@ -155,7 +158,6 @@ def set_env(**kwargs):
         else:
             if var in os.environ:
                 del os.environ[var]
-
 
 
 class NameModifier(object):
@@ -818,4 +820,3 @@ def preserve_environment(*variables):
             msg += ' {0} was set to "{1}", will be unset'
             tty.debug(msg.format(var, os.environ[var]))
             del os.environ[var]
-
