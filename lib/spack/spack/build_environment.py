@@ -41,7 +41,6 @@ import traceback
 import types
 from six import iteritems
 from six import StringIO
-from six import string_types
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize

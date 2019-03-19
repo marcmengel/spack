@@ -526,6 +526,7 @@ def mock_archive(tmpdir_factory):
         path=str(repodir),
         repo_name=repo_name)
 
+
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
     """Creates a very simple git repository with two branches and

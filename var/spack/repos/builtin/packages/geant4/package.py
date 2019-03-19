@@ -145,7 +145,6 @@ class Geant4(CMakePackage):
                 os.symlink(target, os.path.basename(target))
 
     def setup_dependent_environment(self, spack_env, run_env, dep_spec):
-        spec = self.spec
         version = self.version
         major = version[0]
         minor = version[1]
