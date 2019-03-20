@@ -40,8 +40,7 @@ class Libpng(AutotoolsPackage):
             # not honored, see
             #   https://sourceforge.net/p/libpng/bugs/210/#33f1
             # '--with-zlib=' + self.spec['zlib'].prefix,
-            'CPPFLAGS={0}'.format(self.spec['zlib'].headers.
-                                  include_flags.split()[0]),
+            'CPPFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
             'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         return args
