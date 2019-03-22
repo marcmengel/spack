@@ -638,6 +638,7 @@ class EnvironmentModifications(object):
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
                     env.prepend_path(x, after)
+                    continue
 
                 if search not in before:
                     # We just need to set the variable to the new value
