@@ -42,13 +42,18 @@ class Gl2ps(CMakePackage):
 
     depends_on('libpng', when='+png')
     depends_on('zlib',   when='+zlib')
-    depends_on('texlive', when='+doc')
+    depends_on('texlive', type='build', when='+doc')
 
     def variant_to_bool(self, variant):
         return 'ON' if variant in self.spec else 'OFF'
 
     def cmake_args(self):
-        return [
+        options = [
             '-DENABLE_PNG={0}'.format(self.variant_to_bool('+png')),
             '-DENABLE_ZLIB={0}'.format(self.variant_to_bool('+zlib')),
         ]
+        if '~doc' in self.spec:
+            # Make sure we don't look.
+            options.append('-DCMAKE_DISABLE_FIND_PACKAGE_LATEX:BOOL=ON')
+
+        return options

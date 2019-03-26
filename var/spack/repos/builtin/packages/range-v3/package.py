@@ -31,7 +31,7 @@ class RangeV3(CMakePackage):
 
     # Note that as of 0.3.6 range is a header-only library so it is not
     # necessary to match standards with packages using this
-    # one. Eventually range-v3 will be obsoleted by the C++ statndard.
+    # one. Eventually range-v3 will be obsoleted by the C++ standard.
     variant('cxxstd',
             default='11',
             values=('11', '14', '17'),
