@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import itertools
 import os
 import re
 import sys
@@ -46,29 +47,32 @@ def cmd_name(python_name):
 
 #: global, cached list of all commands -- access through all_commands()
 _all_commands = None
+_default_command_path = spack.paths.command_path
 
 
-def all_commands():
-    """Get a sorted list of all spack commands.
+def all_commands(command_list, command_path=None):
+    """Get a sorted list of all spack commands at the specified path.
 
-    This will list the lib/spack/spack/cmd directory and find the
-    commands there to construct the list.  It does not actually import
-    the python files -- just gets the names.
+    This will list the command_path directory and find the commands
+    there to construct the list.  It does not actually import the python
+    files - just gets the names. The names are cached in command_list.
     """
     global _all_commands
-    if _all_commands is None:
-        _all_commands = []
-        command_paths = [spack.paths.command_path]  # Built-in commands
-        command_paths += spack.extensions.get_command_paths()  # Extensions
+    if command_list is None:
+        command_list = []
+        command_paths\
+            = [command_path] if command_path else \
+            itertools.chain([_default_command_path],  # Built-in commands
+                            spack.extensions.get_command_paths())  # Extensions
         for path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r'.py$', '', file)
-                    _all_commands.append(cmd_name(cmd))
+                    command_list.append(cmd_name(cmd))
 
-        _all_commands.sort()
+        command_list.sort()
 
-    return _all_commands
+    return command_list
 
 
 def remove_options(parser, *options):

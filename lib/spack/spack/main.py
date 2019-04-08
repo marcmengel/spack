@@ -87,6 +87,8 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
+#: All found spack commands
+_all_commands = None
 
 
 def set_working_dir():
@@ -99,16 +101,21 @@ def set_working_dir():
         spack_working_dir = spack.paths.prefix
 
 
+def all_commands():
+    """Return all top level commands available with Spack."""
+    return spack.cmd.all_commands(_all_commands)
+
+
 def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
-    for cmd in spack.cmd.all_commands():
+    for cmd in spack.cmd.all_commands(_all_commands):
         parser.add_command(cmd)
 
 
 def index_commands():
     """create an index of commands by section for this help level"""
     index = {}
-    for command in spack.cmd.all_commands():
+    for command in all_commands():
         cmd_module = spack.cmd.get_module(command)
 
         # make sure command modules have required properties
@@ -167,7 +174,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             self.actions = self._subparsers._actions[-1]._get_subactions()
 
         # make a set of commands not yet added.
-        remaining = set(spack.cmd.all_commands())
+        remaining = set(spack.main.all_commands())
 
         def add_group(group):
             formatter.start_section(group.title)
