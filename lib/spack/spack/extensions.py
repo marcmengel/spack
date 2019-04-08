@@ -7,6 +7,7 @@ for Spack's command extensions.
 """
 import os
 import re
+import sys
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -103,15 +104,19 @@ def get_module(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
-    # If built-in failed the import search the extension
-    # directories in order
+
+    pname = spack.cmd.python_name(cmd_name)
     extensions = spack.config.get('config:extensions') or []
-    for folder in extensions:
-        module = load_command_extension(cmd_name, folder)
-        if module:
-            return module
-    else:
-        return None
+    sys.path.extend(extensions)
+
+    module = None
+
+    try:
+        module = spack.cmd.get_module_from(cmd_name, pname)
+    except ImportError:
+        pass
+
+    return module
 
 
 def get_template_dirs():
