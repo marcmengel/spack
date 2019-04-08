@@ -20,7 +20,7 @@ spack.main.add_all_commands(parser)
 def test_commands_by_name():
     """Test default output of spack commands."""
     out = commands()
-    assert out.strip().split('\n') == sorted(spack.cmd.all_commands())
+    assert out.strip().split('\n') == sorted(spack.main.all_commands())
 
 
 def test_subcommands():
