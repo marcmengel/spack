@@ -84,26 +84,22 @@ def remove_options(parser, *options):
                 break
 
 
-def get_module(cmd_name):
-    """Imports the module for a particular command name and returns it.
+def get_module_from(cmd_name, namespace):
+    """Imports the module for a particular command from the specified namespace.
 
     Args:
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
+        namespace (str): namespace for command.
     """
     pname = python_name(cmd_name)
 
-    try:
-        # Try to import the command from the built-in directory
-        module_name = "%s.%s" % (__name__, pname)
-        module = __import__(module_name,
-                            fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                            level=0)
-        tty.debug('Imported {0} from built-in commands'.format(pname))
-    except ImportError:
-        module = spack.extensions.get_module(cmd_name)
-        if not module:
-            raise
+    module_name = '{0}.cmd.{1}'.format(namespace, pname)
+    module = __import__(module_name,
+                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
+                        level=0)
+    tty.debug('Imported {0} as {1}.cmd.{2}'.
+              format(cmd_name, namespace, pname))
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
@@ -111,19 +107,37 @@ def get_module(cmd_name):
     if not hasattr(module, pname):
         tty.die("Command module %s (%s) must define function '%s'." %
                 (module.__name__, module.__file__, pname))
+    return module
+
+
+def get_module(cmd_name):
+    """Imports the module for a particular Spack or extension top-level
+    command name and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+
+    """
+    module = None
+
+    try:
+        module = get_module_from(cmd_name, 'spack')
+    except ImportError:
+        module = spack.extensions.get_module(cmd_name)
 
     return module
 
 
 def get_command(cmd_name):
-    """Imports the command's function from a module and returns it.
+    """Imports a top level command's function from a module and returns it.
 
     Args:
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
     pname = python_name(cmd_name)
-    return getattr(get_module(pname), pname)
+    return getattr(get_module(cmd_name), pname)
 
 
 def parse_specs(args, **kwargs):
