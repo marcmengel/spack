@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"
@@ -100,7 +101,11 @@ def help(parser, args):
         return 0
 
     if args.help_command:
-        parser.add_command(args.help_command)
+        try:
+            parser.add_command(args.help_command)
+        except ImportError:
+            tty.die('Help request for unknown command: {0}'.
+                    format(args.help_command))
         parser.parse_args([args.help_command, '-h'])
     else:
         sys.stdout.write(parser.format_help(level=args.all))

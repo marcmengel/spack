@@ -109,12 +109,7 @@ def get_module(cmd_name):
     extensions = spack.config.get('config:extensions') or []
     sys.path.extend(extensions)
 
-    module = None
-
-    try:
-        module = spack.cmd.get_module_from(cmd_name, pname)
-    except ImportError:
-        pass
+    module = spack.cmd.get_module_from(cmd_name, pname)
 
     return module
 

@@ -117,8 +117,6 @@ def get_module(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
-    module = None
-
     try:
         module = get_module_from(cmd_name, 'spack')
     except ImportError:
