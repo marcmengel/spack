@@ -25,6 +25,7 @@ import spack.database
 import spack.directory_layout
 import spack.package_prefs
 import spack.environment as ev
+import spack.package_prefs
 import spack.paths
 import spack.platforms.test
 import spack.repo

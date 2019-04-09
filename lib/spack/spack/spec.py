@@ -1267,6 +1267,9 @@ class Spec(object):
 
     @property
     def prefix(self):
+        if not self._concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+
         if self._prefix is None:
             upstream, record = spack.store.db.query_by_spec_hash(
                 self.dag_hash())
@@ -1946,7 +1949,8 @@ class Spec(object):
             if patches:
                 spec_to_patches[id(s)] = patches
 
-        # Apply patches required on dependencies by depends_on(..., patch=...)
+        # Also record all patches required on dependencies by
+        # depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
@@ -3236,7 +3240,7 @@ class Spec(object):
                         hashlen = None
                     out.write(fmt % (self.dag_hash(hashlen)))
                 elif named_str == 'NAMESPACE':
-                    out.write(fmt % transform(self.namespace))
+                    out.write(fmt % transform(self, self.namespace))
                 elif named_str.startswith('DEP:'):
                     _, dep_name, dep_option = named_str.lower().split(':', 2)
                     dep_spec = self[dep_name]

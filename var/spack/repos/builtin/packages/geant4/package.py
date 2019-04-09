@@ -152,7 +152,7 @@ class Geant4(CMakePackage):
             patch = version[-1]
         else:
             patch = 0
-        datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
+        datadir = 'Geant4-%s.%s.%s' % (major, minor, patch)
         spack_env.append_path('CMAKE_MODULE_PATH',
                               '{0}/{1}/Modules'.format(
                                   self.prefix.lib64, datadir))

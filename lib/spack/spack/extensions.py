@@ -1,35 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Service functions and classes to implement the hooks
 for Spack's command extensions.
 """
 import os
 import re
+import sys
 
 import llnl.util.lang
 import llnl.util.tty as tty
+
+import spack.config
+
 
 extension_regexp = re.compile(r'spack-([\w]*)')
 
@@ -81,19 +65,17 @@ def load_command_extension(command, path):
     return module
 
 
-def command_paths(*paths):
-    """Generator that yields paths where to search for command files.
+def get_command_paths():
+    """Return the list of paths where to search for command files."""
+    command_paths = []
+    extension_paths = spack.config.get('config:extensions') or []
 
-    Args:
-        *paths: paths where the extensions reside
-
-    Returns:
-        Paths where to search for command files.
-    """
-    for path in paths:
+    for path in extension_paths:
         extension = extension_name(path)
         if extension:
-            yield os.path.join(path, extension, 'cmd')
+            command_paths.append(os.path.join(path, extension, 'cmd'))
+
+    return command_paths
 
 
 def path_for_extension(target_name, *paths):
@@ -112,3 +94,35 @@ def path_for_extension(target_name, *paths):
             return path
     else:
         raise IOError('extension "{0}" not found'.format(target_name))
+
+
+def get_module(cmd_name):
+    """Imports the extension module for a particular command name
+    and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+
+    pname = spack.cmd.python_name(cmd_name)
+    extensions = spack.config.get('config:extensions') or []
+    sys.path.extend(extensions)
+
+    module = None
+
+    try:
+        module = spack.cmd.get_module_from(cmd_name, pname)
+    except ImportError:
+        pass
+
+    return module
+
+
+def get_template_dirs():
+    """Returns the list of directories where to search for templates
+    in extensions.
+    """
+    extension_dirs = spack.config.get('config:extensions') or []
+    extensions = [os.path.join(x, 'templates') for x in extension_dirs]
+    return extensions

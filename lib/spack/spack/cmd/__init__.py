@@ -51,27 +51,25 @@ _default_command_path = spack.paths.command_path
 
 
 def all_commands(command_list, command_path=None):
-    """Get a sorted list of all commands at the specified path.
+    """Get a sorted list of all spack commands at the specified path.
 
     This will list the command_path directory and find the commands
     there to construct the list.  It does not actually import the python
-    files -- just gets the names. The names are cached in command_list.
+    files - just gets the names. The names are cached in command_list.
     """
     if command_list is None:
         command_list = []
-        extensions = spack.config.get('config:extensions') or []
-        command_paths \
+        command_paths\
             = [command_path] if command_path else \
-            itertools.chain(
-                [_default_command_path],
-                spack.extensions.command_paths(*extensions)
-            )
+            itertools.chain([_default_command_path],  # Built-in commands
+                            spack.extensions.get_command_paths())  # Extensions
         for path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r'.py$', '', file)
                     command_list.append(cmd_name(cmd))
-            command_list.sort()
+
+        command_list.sort()
 
     return command_list
 
@@ -86,7 +84,7 @@ def remove_options(parser, *options):
 
 
 def get_module_from(cmd_name, namespace):
-    """Import the module for the given command from the specified namespace.
+    """Imports the module for a particular command from the specified namespace.
 
     Args:
         cmd_name (str): name of the command for which to get a module
@@ -94,6 +92,7 @@ def get_module_from(cmd_name, namespace):
         namespace (str): namespace for command.
     """
     pname = python_name(cmd_name)
+
     module_name = '{0}.cmd.{1}'.format(namespace, pname)
     module = __import__(module_name,
                         fromlist=[pname, SETUP_PARSER, DESCRIPTION],
@@ -111,22 +110,19 @@ def get_module_from(cmd_name, namespace):
 
 
 def get_module(cmd_name):
-    """Imports the module for a particular Spack or extension command name
-    and returns it.
+    """Imports the module for a particular Spack or extension top-level
+    command name and returns it.
 
     Args:
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
-    pname = python_name(cmd_name)
     module = None
 
-    # Try to get the named top level command from Spack first, then from
-    # any configured extensions.
     try:
         module = get_module_from(cmd_name, 'spack')
     except ImportError:
-        module = get_module_from(cmd_name, pname)
+        module = spack.extensions.get_module(cmd_name)
 
     return module
 

@@ -489,6 +489,7 @@ class Root(CMakePackage):
         if 'lz4' in self.spec:
             spack_env.append_path('CMAKE_PREFIX_PATH',
                                   self.spec['lz4'].prefix)
+        spack_env.set('SPACK_INCLUDE_DIRS', '')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)

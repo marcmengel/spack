@@ -40,6 +40,10 @@ def setup_parser(subparser):
         help="run test for a given Spack extension"
     )
     subparser.add_argument(
+        '--extension', default=None,
+        help="run test for a given Spack extension"
+    )
+    subparser.add_argument(
         'tests', nargs=argparse.REMAINDER,
         help="list of tests to run (will be passed to pytest -k)")
 
