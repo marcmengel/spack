@@ -87,8 +87,6 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
-#: All found spack commands
-_all_commands = None
 
 
 def set_working_dir():
@@ -99,11 +97,6 @@ def set_working_dir():
     except OSError:
         os.chdir(spack.paths.prefix)
         spack_working_dir = spack.paths.prefix
-
-
-def all_commands():
-    """Return all top level commands available with Spack."""
-    return spack.cmd.all_commands(_all_commands)
 
 
 def add_all_commands(parser):
@@ -122,7 +115,7 @@ def add_all_commands(parser):
 def index_commands():
     """create an index of commands by section for this help level"""
     index = {}
-    for command in all_commands():
+    for command in spack.cmd.all_commands():
         cmd_module = spack.cmd.get_module(command)
 
         # make sure command modules have required properties
@@ -181,7 +174,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             self.actions = self._subparsers._actions[-1]._get_subactions()
 
         # make a set of commands not yet added.
-        remaining = set(spack.main.all_commands())
+        remaining = set(spack.cmd.all_commands())
 
         def add_group(group):
             formatter.start_section(group.title)
@@ -649,10 +642,6 @@ def main(argv=None):
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
         spack.config.command_line_scopes = args.config_scopes
-
-    # Add extension directories to system path.
-    extensions = spack.config.get('config:extensions') or []
-    sys.path.extend(extensions)
 
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(','))

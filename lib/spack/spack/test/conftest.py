@@ -23,7 +23,6 @@ import spack.config
 import spack.caches
 import spack.database
 import spack.directory_layout
-import spack.package_prefs
 import spack.environment as ev
 import spack.package_prefs
 import spack.paths
@@ -539,7 +538,7 @@ def mock_archive(tmpdir_factory):
 
     Archive = collections.namedtuple('Archive',
                                      ['url', 'path', 'archive_file',
-                                                 'expanded_archive_basedir'])
+                                      'expanded_archive_basedir'])
     archive_file = str(tmpdir.join(archive_name))
 
     # Return the url
