@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 
-import itertools
 import os
 import re
 import sys
@@ -34,6 +33,10 @@ ignore_files = r'^\.|^__init__.py$|^#'
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
 
+# All found spack commands
+_all_commands = None
+_default_command_path = spack.paths.command_path
+
 
 def python_name(cmd_name):
     """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
@@ -45,33 +48,32 @@ def cmd_name(python_name):
     return python_name.replace('_', '-')
 
 
-#: global, cached list of all commands -- access through all_commands()
-_all_commands = None
-_default_command_path = spack.paths.command_path
-
-
-def all_commands(command_list, command_path=None):
+def find_commands(*command_paths):
     """Get a sorted list of all spack commands at the specified path.
 
     This will list the command_path directory and find the commands
     there to construct the list.  It does not actually import the python
-    files - just gets the names. The names are cached in command_list.
+    files - just gets the names. Any caching should be external to this
+    function.
     """
-    if command_list is None:
-        command_list = []
-        command_paths\
-            = [command_path] if command_path else \
-            itertools.chain([_default_command_path],  # Built-in commands
-                            spack.extensions.get_command_paths())  # Extensions
+    command_list = []
+    if command_paths is not None:
         for path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
                     cmd = re.sub(r'.py$', '', file)
                     command_list.append(cmd_name(cmd))
-
         command_list.sort()
-
     return command_list
+
+
+def all_commands():
+    """Return all top level commands available with Spack."""
+    global _all_commands
+    if _all_commands is None:
+        extension_paths = spack.extensions.get_command_paths()
+        _all_commands = find_commands(_default_command_path, *extension_paths)
+    return _all_commands
 
 
 def remove_options(parser, *options):
@@ -92,13 +94,11 @@ def get_module_from(cmd_name, namespace):
         namespace (str): namespace for command.
     """
     pname = python_name(cmd_name)
-
     module_name = '{0}.cmd.{1}'.format(namespace, pname)
     module = __import__(module_name,
                         fromlist=[pname, SETUP_PARSER, DESCRIPTION],
                         level=0)
-    tty.debug('Imported command {0} as {1}.cmd.{2}'.
-              format(cmd_name, namespace, pname))
+    tty.debug('Imported command {0} as {1}'.format(cmd_name, module_name))
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
@@ -120,8 +120,7 @@ def get_module(cmd_name):
     try:
         module = get_module_from(cmd_name, 'spack')
     except ImportError:
-        module = spack.extensions.get_module(cmd_name)
-
+        module = spack.extensions.load_command_extension(cmd_name)
     return module
 
 

@@ -87,8 +87,6 @@ required_command_properties = ['level', 'section', 'description']
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
-#: All found spack commands
-_all_commands = None
 
 
 def set_working_dir():
@@ -101,21 +99,23 @@ def set_working_dir():
         spack_working_dir = spack.paths.prefix
 
 
-def all_commands():
-    """Return all top level commands available with Spack."""
-    return spack.cmd.all_commands(_all_commands)
-
-
 def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
-    for cmd in spack.cmd.all_commands(_all_commands):
-        parser.add_command(cmd)
+    for cmd in spack.cmd.all_commands():
+        try:
+            parser.add_command(cmd)
+        except Exception:
+            if spack.config.get('config:debug'):
+                raise
+            tty.die(
+                'While finding commands: problem loading command {0}'.
+                format(cmd))
 
 
 def index_commands():
     """create an index of commands by section for this help level"""
     index = {}
-    for command in all_commands():
+    for command in spack.cmd.all_commands():
         cmd_module = spack.cmd.get_module(command)
 
         # make sure command modules have required properties
@@ -174,7 +174,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             self.actions = self._subparsers._actions[-1]._get_subactions()
 
         # make a set of commands not yet added.
-        remaining = set(all_commands())
+        remaining = set(spack.cmd.all_commands())
 
         def add_group(group):
             formatter.start_section(group.title)
@@ -676,10 +676,11 @@ def main(argv=None):
 
         try:
             command = parser.add_command(cmd_name)
-        except ImportError:
+        except Exception:
             if spack.config.get('config:debug'):
                 raise
-            tty.die("Unknown command: %s" % args.command[0])
+            tty.die(
+                "Unknown command or failed command load: %s" % args.command[0])
 
         # Re-parse with the proper sub-parser added.
         args, unknown = parser.parse_known_args()

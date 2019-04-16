@@ -7,6 +7,8 @@ import sys
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.config
+
 description = "get help on spack and its commands"
 section = "help"
 level = "short"
@@ -92,7 +94,7 @@ def setup_parser(subparser):
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
         '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='print all available commands')
+        default=None, help='print guide to specs')
 
 
 def help(parser, args):
@@ -103,9 +105,12 @@ def help(parser, args):
     if args.help_command:
         try:
             parser.add_command(args.help_command)
-        except ImportError:
-            tty.die('Help request for unknown command: {0}'.
-                    format(args.help_command))
+        except Exception:
+            if spack.config.get('config:debug'):
+                raise
+            tty.die(
+                'Help request for unknown command or failed command load: {0}'.
+                format(args.help_command))
         parser.parse_args([args.help_command, '-h'])
     else:
         sys.stdout.write(parser.format_help(level=args.all))
