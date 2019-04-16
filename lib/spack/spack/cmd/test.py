@@ -34,11 +34,6 @@ def setup_parser(subparser):
     list_group.add_argument(
         '-L', '--long-list', action='store_true', default=False,
         help="list the entire hierarchy of tests")
-
-    subparser.add_argument(
-        '--extension', default=None,
-        help="run test for a given Spack extension"
-    )
     subparser.add_argument(
         '--extension', default=None,
         help="run test for a given Spack extension"
