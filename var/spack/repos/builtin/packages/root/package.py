@@ -75,6 +75,9 @@ class Root(CMakePackage):
         description='Enable graphviz support')
     variant('gdml', default=True,
         description='Enable GDML writer and reader')
+    variant('gminimal', default=True,
+        description='Ignore most of Root\'s feature defaults except for '
+        'basic graphic options')
     variant('gsl', default=True,
         description='Enable linking against shared libraries for GSL')
     variant('http', default=False,
@@ -184,7 +187,7 @@ class Root(CMakePackage):
     depends_on('libsm',   when="+x")
 
     # OpenGL
-    depends_on('ftgl',  when="+x+opengl")
+    depends_on('ftgl@2.1.3-rc5',  when="+x+opengl")
     depends_on('glew',  when="+x+opengl")
     depends_on('gl',    when="+x+opengl")
     depends_on('glu',   when="+x+opengl")
@@ -337,6 +340,8 @@ class Root(CMakePackage):
                 'ON' if '+opengl' in spec else 'OFF'),
             '-Dgenvector:BOOL=%s' % (
                 'ON' if '+math' in spec else 'OFF'),  # default ON
+            '-Dgminimal:BOOL=%s' % (  # Reduce unwanted surprises
+                'ON' if '+gminimal' in spec else 'OFF'),  # Default ON
             '-Dgsl_shared:BOOL=%s' % (
                 'ON' if '+gsl' in spec else 'OFF'),
             '-Dgviz:BOOL=%s' % (
@@ -379,14 +384,14 @@ class Root(CMakePackage):
                 'ON' if '+pythia6' in spec else 'OFF'),
             # Force not to build pythia8 (not supported yet by spack), to avoid
             # wrong defaults from ROOT at build time
+            '-Dpythia8:BOOL=%s' % (
+                'ON' if '+pythia8' in spec else 'OFF'),
             '-Dpython:BOOL=%s' % (
                 'ON' if self.spec.satisfies('+python ^python@2.7:2.99.99')
                 else 'OFF'),
             '-Dpython3:BOOL=%s' % (
                 'ON' if self.spec.satisfies('+python ^python@3.0:')
                 else 'OFF'),
-            '-Dpythia8:BOOL=%s' % (
-                'ON' if '+pythia8' in spec else 'OFF'),
             '-Dqt:BOOL=%s' % (
                 'ON' if '+qt4' in spec else 'OFF'),
             '-Dqtgsi:BOOL=%s' % (
@@ -431,29 +436,29 @@ class Root(CMakePackage):
                 'ON' if '+xrootd' in spec else 'OFF'),  # default ON
 
             # Fixed options
-            '-Dafdsmrgd=OFF',  # not supported
-            '-Dafs=OFF',      # not supported
-            '-Dalien=OFF',
-            '-Dcastor=OFF',   # not supported
-            '-Dccache=OFF',   # not supported
-            '-Dchirp=OFF',
-            '-Dcling=ON',
-            '-Ddcache=OFF',  # not supported
-            '-Dgeocad=OFF',  # not supported
-            '-Dgfal=OFF',    # not supported
-            '-Dglite=OFF',   # not supported
-            '-Dglobus=OFF',
-            '-Dgminimal=ON',  # Reduce unwanted surprises
-            '-Dgnuinstall=OFF',
-            '-Dhdfs=OFF',    # TODO pending to add
-            '-Dmonalisa=OFF',  # not supported
-            '-Drfio=OFF',      # not supported
-            '-Droottest=OFF',  # requires network
-            '-Druby=OFF',      # unmantained upstream
-            '-Druntime_cxxmodules=OFF',  # use clang C++ modules, experimental
-            '-Dsapdb=OFF',     # option not implemented
-            '-Dsrp=OFF',       # option not implemented
-            '-Dtcmalloc=OFF'
+            '-Dafdsmrgd:BOOL=OFF',  # not supported
+            '-Dafs:BOOL=OFF',       # not supported
+            '-Dalien:BOOL=OFF',
+            '-Dcastor:BOOL=OFF',    # not supported
+            '-Dccache:BOOL=OFF',    # not supported
+            '-Dchirp:BOOL=OFF',
+            '-Dcling:BOOL=ON',
+            '-Ddcache:BOOL=OFF',    # not supported
+            '-Dgeocad:BOOL=OFF',    # not supported
+            '-Dgfal:BOOL=OFF',      # not supported
+            '-Dglite:BOOL=OFF',     # not supported
+            '-Dglobus:BOOL=OFF',
+            '-Dgnuinstall:BOOL=OFF',
+            '-Dhdfs:BOOL=OFF',      # TODO pending to add
+            '-Dmonalisa:BOOL=OFF',  # not supported
+            '-Drfio:BOOL=OFF',      # not supported
+            '-Droottest:BOOL=OFF',  # requires network
+            '-Druby:BOOL=OFF',      # unmantained upstream
+            # Use clang C++ modules, experimental
+            '-Druntime_cxxmodules:BOOL=OFF',
+            '-Dsapdb:BOOL=OFF',     # option not implemented
+            '-Dsrp:BOOL=OFF',       # option not implemented
+            '-Dtcmalloc:BOOL=OFF'
 
         ])
 
@@ -489,7 +494,7 @@ class Root(CMakePackage):
         if 'lz4' in self.spec:
             spack_env.append_path('CMAKE_PREFIX_PATH',
                                   self.spec['lz4'].prefix)
-        spack_env.set('SPACK_INCLUDE_DIRS', '')
+        spack_env.set('SPACK_INCLUDE_DIRS', '', force=True)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('ROOTSYS', self.prefix)
