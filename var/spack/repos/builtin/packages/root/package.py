@@ -40,13 +40,29 @@ class Root(CMakePackage):
     version('6.06.02', sha256='18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1')
     version('5.34.38', sha256='2c3bda69601d94836bdd88283a6585b4774eafc813deb6aa348df0af2922c4d2')
 
+    # ###################### Patches ##########################
+
+    # Widely used patch (CMS, FNAL) to increase the size of static
+    # buffers used to improve the operation of TString.
     patch('format-stringbuf-size.patch', level=0)
-    patch('find-mysql.patch', level=1)
+    # Support use of `mariadb-c-client` and `mariadb` to provide the
+    # MySQL API _cf_
+    # https://github.com/root-project/root/commit/9c0fa8c554a569c971185249f9acfff4418c0c13.
+    patch('find-mysql.patch', level=1, when='@:6.16.00')
+    # Some ROOT versions did not honor the option to avoid building an
+    # internal version of unuran, _cf_
+    # https://github.com/root-project/ROOT/commit/3e60764f133218b6938e5aa4986de760e8f058d9.
     patch('honor-unuran-switch.patch', level=1, when='@:6.13.99')
+    # 6.16.00 fails to handle particular build option combinations, _cf_
+    # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch('root7-webgui.patch', level=1, when='@6.16.00')
 
     if sys.platform == 'darwin':
+        # Resolve non-standard use of uint, _cf_
+        # https://sft.its.cern.ch/jira/browse/ROOT-7886.
         patch('math_uint.patch', when='@6.06.02')
+        # Resolve circular dependency, _cf_
+        # https://sft.its.cern.ch/jira/browse/ROOT-8226.
         patch('root6-60606-mathmore.patch', when='@6.06.06')
 
     # ###################### Variants ##########################
@@ -174,6 +190,7 @@ class Root(CMakePackage):
     depends_on('libice')
     depends_on('libpng')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
+    depends_on('ncurses')
     depends_on('pcre')
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
