@@ -23,14 +23,12 @@ level = "long"
 def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['clean', 'dirty'])
     subparser.add_argument(
-        '--dump', action='store_true', default=False,
-        help="instead of a command, last argument specifies a file to which "
-        "to write a source-able script to replicate the environment."
+        '--dump', metavar="FILE",
+        help="dump a source-able environment to FILE"
     )
     subparser.add_argument(
-        '--pickle', action='store_true', default=False,
-        help="instead of a command, last argument is a file to which to write "
-        "a pickled environment dictionary."
+        '--pickle', metavar="FILE",
+        help="dump a pickled source-able environment to FILE"
     )
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
@@ -60,25 +58,24 @@ def build_env(parser, args):
     spec = specs[0]
 
     build_environment.setup_package(spec.package, args.dirty)
+
     if args.dump:
-        if cmd and len(cmd) == 1:
-            dump_environment(cmd[0])
-        else:
-            tty.die("--dump requires a single file to which to dump "
-                    "the environment")
+        # Dump a source-able environment to a text file.
+        tty.msg("Dumping a source-able environment to {0}".format(args.dump))
+        dump_environment(args.dump)
 
-    elif args.pickle:
-        if cmd and len(cmd) == 1:
-            pickle_environment(cmd[0])
-        else:
-            tty.die("--dump requires a single file to which to dump "
-                    "the environment")
+    if args.pickle:
+        # Dump a source-able environment to a pickle file.
+        tty.msg(
+            "Pickling a source-able environment to {0}".format(args.pickle))
+        pickle_environment(args.pickle)
 
-    elif not cmd:
-        # If no command act like the "env" command and print out env vars.
+    if cmd:
+        # Execute the command with the new environment
+        os.execvp(cmd[0], cmd)
+
+    elif not bool(args.pickle or args.dump):
+        # If no command or dump/pickle option act like the "env" command
+        # and print out env vars.
         for key, val in os.environ.items():
             print("%s=%s" % (key, val))
-
-    else:
-        # Otherwise execute the command with the new environment
-        os.execvp(cmd[0], cmd)
