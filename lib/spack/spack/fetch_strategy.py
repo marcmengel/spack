@@ -80,16 +80,22 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     #: classes have multiple ``url_attrs`` at the top-level.
     optional_attrs = []  # optional attributes in version() args.
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
         self.stage = None
+        # Possibly disable caching for this strategy.
+        self._no_cache_opt = kwargs.pop('no_cache', False)
 
     def set_stage(self, stage):
         """This is called by Stage before any of the fetching
            methods are called on the stage."""
         self.stage = stage
+
+    @property
+    def no_cache_opt(self):
+        return self._no_cache_opt
 
     # Subclasses need to implement these methods
     def fetch(self):
@@ -175,7 +181,7 @@ class URLFetchStrategy(FetchStrategy):
     optional_attrs = list(crypto.hashes.keys()) + ['checksum']
 
     def __init__(self, url=None, checksum=None, **kwargs):
-        super(URLFetchStrategy, self).__init__()
+        super(URLFetchStrategy, self).__init__(**kwargs)
 
         # Prefer values in kwargs to the positionals.
         self.url = kwargs.get('url', url)
@@ -307,7 +313,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def cachable(self):
-        return bool(self.digest)
+        return not self.no_cache_opt and bool(self.digest)
 
     @_needs_stage
     def expand(self):
@@ -455,7 +461,7 @@ class VCSFetchStrategy(FetchStrategy):
     """
 
     def __init__(self, **kwargs):
-        super(VCSFetchStrategy, self).__init__()
+        super(VCSFetchStrategy, self).__init__(**kwargs)
 
         # Set a URL based on the type of fetch strategy.
         self.url = kwargs.get(self.url_attr, None)
@@ -578,7 +584,8 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     enabled = True
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit', 'submodules']
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules',
+                      'all_branches', 'full_depth']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
@@ -589,6 +596,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         self._git = None
         self.submodules = kwargs.get('submodules', False)
+        self.full_depth = kwargs.get('full_depth', False)
+        self.all_branches = kwargs.get('all_branches', False)
 
     @property
     def git_version(self):
@@ -609,7 +618,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return bool(self.commit or self.tag)
+        return not self.no_cache_opt and bool(self.commit or self.tag)
 
     def source_id(self):
         return self.commit or self.tag
@@ -670,19 +679,22 @@ class GitFetchStrategy(VCSFetchStrategy):
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
-            if self.git_version > ver('1.7.10'):
+            if not self.all_branches and self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
 
             with working_dir(self.stage.path):
                 cloned = False
                 # Yet more efficiency, only download a 1-commit deep tree
-                if self.git_version >= ver('1.7.1'):
+                if not self.full_depth and \
+                   self.git_version >= ver('1.7.1') and \
+                   not self.url.startswith('http:'):
                     try:
                         git(*(args + ['--depth', '1', self.url]))
                         cloned = True
                     except spack.error.SpackError:
-                        # This will fail with the dumb HTTP transport
-                        # continue and try without depth, cleanup first
+                        # This will fail with the dumb HTTP protocol
+                        # (e.g. over https://). Continue and try without
+                        # depth.
                         pass
 
                 if not cloned:
@@ -765,7 +777,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return bool(self.revision)
+        return not self.no_cache_opt and bool(self.revision)
 
     def source_id(self):
         return self.revision
@@ -872,7 +884,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return bool(self.revision)
+        return not self.no_cache_opt and bool(self.revision)
 
     def source_id(self):
         return self.revision
@@ -988,7 +1000,9 @@ def _check_version_attributes(fetcher, pkg, version):
     all_optionals = set(a for s in all_strategies for a in s.optional_attrs)
 
     args = pkg.versions[version]
-    extra = set(args) - set(fetcher.optional_attrs) - set([fetcher.url_attr])
+    extra\
+        = set(args) - set(fetcher.optional_attrs) - \
+        set([fetcher.url_attr, 'no_cache'])
     extra.intersection_update(all_optionals)
 
     if extra:
