@@ -38,22 +38,19 @@ class Geant4(CMakePackage):
 
     # C++11 support
     depends_on("xerces-c cxxstd=11", when="cxxstd=11")
-    depends_on("clhep@2.4.0.0: cxxstd=11", when="@10.04 cxxstd=11")
-    depends_on("clhep@:2.3.4.9 cxxstd=11", when="@10.03.p03 cxxstd=11")
+    depends_on("clhep@2.3.3.0 cxxstd=11", when="@10.03.p03: cxxstd=11")
     depends_on("vecgeom cxxstd=11", when="+vecgeom cxxstd=11")
 
     # C++14 support
     depends_on("xerces-c cxxstd=14", when="cxxstd=14")
-    depends_on("clhep@2.4.0.0: cxxstd=14", when="@10.04 cxxstd=14")
-    depends_on("clhep@:2.3.4.9 cxxstd=14", when="@10.03.p03 cxxstd=14")
+    depends_on("clhep@2.3.3.0 cxxstd=14", when="@10.03.p03: cxxstd=14")
     depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     # C++17 support
     depends_on("xerces-c cxxstd=17", when="cxxstd=17")
+    depends_on("clhep@2.3.3.0 cxxstd=17", when="@10.03.p03: cxxstd=17")
     patch('cxx17.patch', when='@:10.03.p99 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.04.00: cxxstd=17')
-    depends_on("clhep@2.4.0.0: cxxstd=17", when="@10.04 cxxstd=17")
-    depends_on("clhep@:2.3.4.9 cxxstd=17", when="@10.03.p03 cxxstd=17")
     depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
