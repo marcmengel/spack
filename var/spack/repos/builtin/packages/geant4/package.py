@@ -71,12 +71,15 @@ class Geant4(CMakePackage):
     depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
     depends_on('geant4-data@10.04', when='@10.04 ~data')
 
+    patch('CLHEP-10.03.03.patch', level=1, when='@10.03.p03')
+
     def cmake_args(self):
         spec = self.spec
 
         options = [
             '-DGEANT4_USE_GDML=ON',
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
+            '-DGEANT4_USE_SYSTEM_CLHEP_GRANULAR=ON',
             '-DGEANT4_USE_G3TOG4=ON',
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
