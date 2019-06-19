@@ -22,4 +22,3 @@ class PyPoms(PythonPackage):
     depends_on('py-requests',          type=('build', 'run'))
     depends_on('py-prometheus-client', type=('build', 'run'))
     depends_on('py-more-itertools',    type=('build', 'run'))
-    depends_on('py-prometheus-client', type=('build', 'run'))
