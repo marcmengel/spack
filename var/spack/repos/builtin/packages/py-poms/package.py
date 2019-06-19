@@ -12,6 +12,8 @@ class PyPoms(PythonPackage):
     version('4_1_0', 'c8682135a0d4eae8df00a29ececb6020')
 
     depends_on('python',               type=('build','run'))
+    depends_on('py-setuptools',        type=('build', 'run'))
+    depends_on('py-psycopg2',          type=('build', 'run'))
     depends_on('py-cherrypy',          type=('build', 'run'))
     depends_on('py-futures',           type=('build', 'run'))
     depends_on('py-jinja2',            type=('build', 'run'))
