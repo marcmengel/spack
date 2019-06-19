@@ -18,7 +18,6 @@ class PyPoms(PythonPackage):
     depends_on('py-futures',           type=('build', 'run'))
     depends_on('py-jinja2',            type=('build', 'run'))
     depends_on('py-more-itertools',    type=('build', 'run'))
-    depends_on('py-requests',          type=('build', 'run'))
     depends_on('py-prometheus-client', type=('build', 'run'))
     depends_on('py-psycopg2',          type=('build', 'run'))
     depends_on('py-python-crontab',    type=('build', 'run'))
