@@ -13,3 +13,9 @@ class PyCherrypy(PythonPackage):
     # FIXME: Add dependencies if required.
     depends_on('py-setuptools', type='build')
     depends_on('py-docutils', type='build')
+    depends_on('py-more-itertools',    type=('build', 'run'))
+    depends_on('py-zc-buildout',       type=('build', 'run'))
+    depends_on('py-zc-lockfile',       type=('build', 'run'))
+    depends_on('py-cheroot',           type=('build', 'run'))
+    depends_on('py-tempora',           type=('build', 'run'))
+    depends_on('py-portend',           type=('build', 'run'))
