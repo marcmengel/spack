@@ -17,6 +17,8 @@ modules:
   enable:
     - tcl
     - dotkit
+    - ups_table
+    - ups_version
   prefix_inspections:
     bin:
       - PATH
