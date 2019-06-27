@@ -135,7 +135,7 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']}},
+                    'enum': ['tcl', 'dotkit', 'lmod', 'ups_table', 'ups_version']}},
             'lmod': {
                 'allOf': [
                     # Base configuration

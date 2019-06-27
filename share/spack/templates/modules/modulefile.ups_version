@@ -1,0 +1,13 @@
+FILE = version
+PRODUCT = {{spec.name}}
+VERSION = {{spec.verision}}
+
+FLAVOR="{{spec.upsflavor}}"
+QUALIFIERS=""
+
+  DECLARER = {{username}}
+  DECLARED = {{timestamp}}
+  MODIFIER = {{username}}
+  MODIFIED = {{timestamp}}
+  PROD_DIR = {{spec.prefix}}
+  TABLE_FILE = {{spec.name}}_{{spec.version}}.table
