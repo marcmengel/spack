@@ -1,7 +1,11 @@
 FILE = Table
 PRODUCT = {{spec.name}}
 
+<<<<<<< HEAD
 FLAVOR=ANY
+=======
+FLAVOR=""
+>>>>>>> trying to hook it all up
 QUALIFIERS=""
 
 Action = setup
