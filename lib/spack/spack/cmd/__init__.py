@@ -53,8 +53,7 @@ def find_commands(*command_paths):
 
     This will list the command_path directory and find the commands
     there to construct the list.  It does not actually import the python
-    files - just gets the names. Any caching should be external to this
-    function.
+    files - just gets the names.
     """
     command_list = []
     if command_paths is not None:
@@ -277,7 +276,7 @@ def display_specs(specs, args=None, **kwargs):
         hashes = True
         hlen = None
 
-    nfmt = '{namespace}{name}' if namespace else '{name}'
+    nfmt = '{namespace}.{name}' if namespace else '{name}'
     ffmt = ''
     if full_compiler or flags:
         ffmt += '{%compiler.name}'
