@@ -123,7 +123,8 @@ class Mysql(CMakePackage):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
-        # shebang to '/usr/bin/env python'.
+        # shebang to '/usr/bin/env python'. Treatment adapted from that
+        # used in glib recipe per M. Culpo @b2822b258.
         dtrace = which('dtrace').path
         dtrace_copy_path = os.path.join(tempfile.mkdtemp(), 'dtrace-copy')
         dtrace_copy = os.path.join(dtrace_copy_path, 'dtrace')
@@ -143,10 +144,12 @@ class Mysql(CMakePackage):
         flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         if flag:
             spack_env.append_flags('CXXFLAGS', flag)
-        if cxxstd > 11:
-            spack_env.append_flags('CXXFLAGS', '-Wno-deprecated-declarations')
-        if cxxstd > 14:
-            spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
+        if cxxstd != '98':
+            if int(cxxstd) > 11:
+                spack_env.append_flags('CXXFLAGS',
+                                       '-Wno-deprecated-declarations')
+            if int(cxxstd) > 14:
+                spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
         if 'python' in self.spec.flat_dependencies() and \
            self.spec.satisfies('@:7.99.99'):
             self.fix_dtrace_usr_bin_path(spack_env)
