@@ -3,14 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-unset DISTRO
-unset DISTRO_VERSION
-unset BASE_IMAGE
-unset BASE_NAME
-unset BASE_TAG
-unset TAG
-unset EXTRA_TAGS
+from spack.pkg.builtin.mock.patch import Patch
 
-export BASE_IMAGE="archlinux/base"
-export BASE_NAME="archlinux"
-export DISTRO="arch"
+
+class PatchInheritance(Patch):
+    def install(self, spec, prefix):
+        Patch.install(self, spec, prefix)
