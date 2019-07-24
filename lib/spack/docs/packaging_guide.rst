@@ -574,7 +574,9 @@ Download caching
 Spack maintains a cache (described :ref:`here <caching>`) which saves files
 retrieved during package installations to avoid re-downloading in the case that
 a package is installed with a different specification (but the same version) or
-reinstalled on account of a change in the hashing scheme.
+reinstalled on account of a change in the hashing scheme. It may
+(rarely) be necessary to avoid caching for a particular version by adding
+`no_cache=True` as an option to the ``version()`` directive.
 
 ^^^^^^^^^^^^^^^^^^
 Version comparison
@@ -880,6 +882,11 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``full_depth``: If the version of git and the specified transport
+  protocol support it, `--depth 1` will be used unless this option is
+  `True`.
+* ``all_branches``: If the version of git supports it, `--single-branch`
+  will be used unless this option is `True`.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
