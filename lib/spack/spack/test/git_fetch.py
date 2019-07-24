@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import copy
 import os
 import shutil
 
@@ -48,7 +49,7 @@ def git_version(request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, 'git_version', ver('1.7.1'))
+        monkeypatch.setattr(GitFetchStrategy, 'git_version', test_git_version)
         yield
 
 
@@ -169,3 +170,81 @@ def test_needs_stage():
                        matches=_mock_transport_error):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
         fetcher.fetch()
+
+
+@pytest.mark.parametrize("all_branches", [True, False])
+def test_all_branches(all_branches, mock_git_repository,
+                      config, mutable_mock_packages):
+    """Ensure that we can force all branches to be downloaded."""
+
+    git_version\
+        = ver(mock_git_repository.git_exe('--version', output=str).
+              lstrip('git version '))
+    if git_version < ver('1.7.10'):
+        pytest.skip('Not testing --single-branch for older git')
+
+    secure = True
+    type_of_test = 'tag-branch'
+
+    t = mock_git_repository.checks[type_of_test]
+
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+
+    args = copy.copy(t.args)
+    args['all_branches'] = all_branches
+    pkg.versions[ver('git')] = args
+
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            pkg.do_stage()
+            with working_dir(pkg.stage.source_path):
+                branches\
+                    = mock_git_repository.git_exe('branch', '-a',
+                                                  output=str).splitlines()
+        nbranches = len(branches)
+        if all_branches:
+            assert(nbranches == 5)
+        else:
+            assert(nbranches == 2)
+
+
+@pytest.mark.parametrize("full_depth", [True, False])
+def test_full_depth(full_depth, mock_git_repository,
+                    config, mutable_mock_packages):
+    """Ensure that we can clone a repository at full depth."""
+
+    git_version\
+        = ver(mock_git_repository.git_exe('--version', output=str).
+              lstrip('git version '))
+    if git_version < ver('1.7.1'):
+        pytest.skip('Not testing --depth for older git')
+
+    secure = True
+    type_of_test = 'tag-branch'
+
+    t = mock_git_repository.checks[type_of_test]
+
+    spec = Spec('git-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    args = copy.copy(t.args)
+    args['full_depth'] = full_depth
+    pkg.versions[ver('git')] = args
+
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            pkg.do_stage()
+            with working_dir(pkg.stage.source_path):
+                commits\
+                    = mock_git_repository.\
+                    git_exe('log', '--graph',
+                            '--pretty=format:%h -%d %s (%ci) <%an>',
+                            '--abbrev-commit',
+                            output=str).splitlines()
+                ncommits = len(commits)
+        if full_depth:
+            assert(ncommits == 2)
+        else:
+            assert(ncommits == 1)
