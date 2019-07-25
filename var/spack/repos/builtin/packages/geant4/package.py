@@ -71,6 +71,8 @@ class Geant4(CMakePackage):
     depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
     depends_on('geant4-data@10.04', when='@10.04 ~data')
 
+    # As released, 10.03.03 has issues with respect to using external
+    # CLHEP.
     patch('CLHEP-10.03.03.patch', level=1, when='@10.03.p03')
 
     def cmake_args(self):
