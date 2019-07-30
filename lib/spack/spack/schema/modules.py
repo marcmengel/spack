@@ -163,6 +163,20 @@ properties = {
                     {}  # Specific dotkit extensions
                 ]
             },
+            'ups_table': {
+                'allOf': [
+                    # Base configuration
+                    module_type_configuration,
+                    {}  # Specific tcl extensions
+                ]
+            },
+            'ups_version': {
+                'allOf': [
+                    # Base configuration
+                    module_type_configuration,
+                    {}  # Specific tcl extensions
+                ]
+            },
         },
     },
 }

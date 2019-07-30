@@ -14,6 +14,6 @@ def add_command(parser, command_dict):
     )
     spack.cmd.modules.setup_parser(ups_version_parser)
 
-    command_dict['tcl'] = functools.partial(
+    command_dict['ups_version'] = functools.partial(
         spack.cmd.modules.modules_cmd, module_type='ups_version'
     )
