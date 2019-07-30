@@ -1,14 +1,14 @@
 FILE = Table
 PRODUCT = {{spec.name}}
 
-FLAVOR=""
+FLAVOR=ANY
 QUALIFIERS=""
 
 Action = setup
     prodDir()
     setupEnv()
-{% for module in prerequisites %}
-    setupRequired({{ module }})
+{% for package in spec._dependencies.keys() %}
+    setupRequired({{package}})
 {% endfor %}
 
 {% block environment %}
