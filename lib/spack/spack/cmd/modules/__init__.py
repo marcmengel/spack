@@ -227,6 +227,8 @@ def refresh(module_type, specs, args):
         specs = list(s for s in specs if not s.package.installed_upstream)
 
     if not args.yes_to_all:
+        import traceback
+        traceback.print_stack()
         msg = 'You are about to regenerate {types} module files for:\n'
         tty.msg(msg.format(types=module_type))
         spack.cmd.display_specs(specs, long=True)

@@ -13,15 +13,21 @@ from __future__ import absolute_import
 from .dotkit import DotkitModulefileWriter
 from .tcl import TclModulefileWriter
 from .lmod import LmodModulefileWriter
+from .ups_table import UpsTableModulefileWriter
+from .ups_version import UpsVersionModulefileWriter
 
 __all__ = [
     'DotkitModulefileWriter',
     'TclModulefileWriter',
-    'LmodModulefileWriter'
+    'LmodModulefileWriter',
+    'UpsTableModulefileWriter',
+    'UpsVersionModulefileWriter',
 ]
 
 module_types = {
     'dotkit': DotkitModulefileWriter,
     'tcl': TclModulefileWriter,
-    'lmod': LmodModulefileWriter
+    'lmod': LmodModulefileWriter,
+    'ups_table': UpsTableModulefileWriter,
+    'ups_version': UpsVersionModulefileWriter,
 }
