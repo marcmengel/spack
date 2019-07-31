@@ -1,15 +1,7 @@
 FILE = Table
 PRODUCT = {{spec.name}}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 FLAVOR=ANY
-=======
-FLAVOR=""
->>>>>>> trying to hook it all up
-=======
-FLAVOR=ANY
->>>>>>> now with flavor and qualifier conversions and basic dependencies, still need same on dependencies
 QUALIFIERS=""
 
 Action = setup
