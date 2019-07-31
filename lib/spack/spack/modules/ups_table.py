@@ -109,6 +109,3 @@ class UpsTableContext(BaseContext):
 class UpsTableModulefileWriter(BaseModuleFileWriter):
     """Writer class for ups_table module files."""
     default_template = os.path.join('modules', 'modulefile.ups_table')
-
-    def remove(self):
-        pass
