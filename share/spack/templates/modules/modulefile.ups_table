@@ -2,7 +2,24 @@ FILE = Table
 PRODUCT = {{spec.name}}
 
 FLAVOR=ANY
+
+{% if   (spec.compiler|string).find('gcc@7.3.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e15' %}
+{% elif (spec.compiler|string).find('gcc@6.3.0')==0   %}{%set upscompquals = 'e14' %}
+{% elif (spec.compiler|string).find('gcc@4.9.3')==0   %}{%set upscompquals = 'e10' %}
+{% elif (spec.compiler|string).find('gcc@6.4.0')==0   %}{%set upscompquals = 'e17' %}
+{% elif (spec.compiler|string).find('clang@5.0.1')==0 %}{%set upscompquals = 'c2' %}
+{% endif %}
+
+{% if (spec.compiler_flags|string).find('-g')>0 %}{%set upsdebugquals="debug"%}
+{%else%}{%set upsdebugquals="opt"%}
+{%endif%}
+
+{%if  upscompquals  %}
+QUALIFIERS="{{upscompquals}}:{{upsdebugquals}}"
+{%else%}
 QUALIFIERS=""
+{%endif%}
 
 Action = setup
     prodDir()
