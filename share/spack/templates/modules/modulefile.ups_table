@@ -15,13 +15,13 @@ Action = setup
 {% for command_name, cmd in environment_modifications %}
 {# A non-standard separator is required #}
 {% if command_name == 'PrependPath' %}
-    PathPrepend({{ cmd.name }}, "{{ cmd.value }}", "{{cmd.separator}}")
+    PathPrepend({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{cmd.separator}}")
 {% elif command_name == 'AppendPath' %}
-    PathAppend({{ cmd.name }}, "{{ cmd.value }}", "{{cmd.separator}}")
+    PathAppend({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{cmd.separator}}")
 {% elif command_name == 'RemovePath' %}
-    PathRemove({{ cmd.name }}, "{{ cmd.value }}", "{{ cmd.separator }}")
+    PathRemove({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}", "{{ cmd.separator }}")
 {% elif command_name == 'SetEnv' %}
-    EnvSet({{ cmd.name }}, "{{ cmd.value }}")
+    EnvSet({{ cmd.name }}, "{{ cmd.value|replace(spec.prefix,'${UPS_PROD_DIR}') }}")
 {% elif command_name == 'UnsetEnv' %}
     EnvUnset({{ cmd.name }})
 {% endif %}
