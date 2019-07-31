@@ -8,7 +8,7 @@ Action = setup
     prodDir()
     setupEnv()
 {% for package in spec._dependencies.keys() %}
-    setupRequired({{package}} {{spec._cmp_key_cache[package]['version']}} -f ${UPS_PROD_FLAVOR})
+    setupRequired({{package}} {%for c in (spec|string).split('^')%} {%if c.split('@')[0] == package%} {{c.split('@')[1].split('%')[0]}}{%endif%} {%endfor%} -f ${UPS_PROD_FLAVOR})
 {% endfor %}
 
 {% block environment %}
