@@ -173,8 +173,7 @@ def info(message, *args, **kwargs):
     st_countback = 10
 
     st_text = ""
-    # if _stacktrace:
-    if True:
+    if _stacktrace:
         st_text = process_stacktrace(st_countback)
     cprint("@%s{%s==>} %s%s" % (
         format, st_text, get_timestamp(), cescape(six.text_type(message))
