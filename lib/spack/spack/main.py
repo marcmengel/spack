@@ -581,7 +581,9 @@ def print_setup_info(*info):
     module_to_roots = {
         'tcl': list(),
         'dotkit': list(),
-        'lmod': list()
+        'lmod': list(),
+        'ups_table': list(),
+        'ups_version': list(),
     }
     for name, path in module_roots.items():
         path = spack.util.path.canonicalize_path(path)
