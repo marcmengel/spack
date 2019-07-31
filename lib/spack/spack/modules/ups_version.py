@@ -59,14 +59,18 @@ class UpsVersionFileLayout(BaseFileLayout):
     """File layout for ups_version module files."""
 
     def dirname(self):
-        return root_path('ups_version') + '/'+ self.spec.format("{name}/{version}.version")
+        return root_path('ups_version') 
+
 
     @property
     def filename(self):
         """Name of the module file for the current spec."""
         # Just the name of the file
         filename = os.path.basename(self.use_name)
-        return os.path.join(self.dirname(), filename)
+        subdirname = self.spec.format("{name}/{version}.version")
+        if not os.access(os.path.join(self.dirname(), subdirname),os.F_OK):
+            os.makedirs(os.path.join(self.dirname(), subdirname))
+        return os.path.join(self.dirname(), subdirname, filename)
 
 
 class UpsVersionContext(BaseContext):
