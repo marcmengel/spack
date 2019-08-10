@@ -169,8 +169,7 @@ def info(message, *args, **kwargs):
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)
     break_long_words = kwargs.get('break_long_words', False)
-    #st_countback = kwargs.get('countback', 3)
-    st_countback = 10
+    st_countback = kwargs.get('countback', 3)
 
     st_text = ""
     if _stacktrace:
