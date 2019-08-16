@@ -23,5 +23,8 @@ class PyPoms(PythonPackage):
     depends_on('py-psycopg2',          type=('build', 'run'))
     depends_on('py-python-crontab',    type=('build', 'run'))
     depends_on('py-requests',          type=('build', 'run'))
+<<<<<<< HEAD
     depends_on('py-setuptools',        type=('build', 'run'))
     depends_on('py-sqlalchemy',        type=('build', 'run'))
+=======
+>>>>>>> 1bf486073350a661d9a05cf0da7e8eb8c9c1dc76
