@@ -127,14 +127,14 @@ class Catalyst(CMakePackage):
         super(Catalyst, self).do_stage(mirror_only)
 
         # extract the catalyst part
-        paraview_dir = os.path.join(self.stage.source_path,
-                                    'ParaView-v' + str(self.version))
-        catalyst_script = os.path.join(paraview_dir, 'Catalyst', 'catalyze.py')
-        editions_dir = os.path.join(paraview_dir, 'Catalyst', 'Editions')
+        catalyst_script = os.path.join(self.stage.source_path, 'Catalyst',
+                                       'catalyze.py')
+        editions_dir = os.path.join(self.stage.source_path, 'Catalyst',
+                                    'Editions')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
         command = ['python', catalyst_script,
-                   '-r', paraview_dir,
+                   '-r', self.stage.source_path,
                    '-o', catalyst_source_dir]
 
         for edition in self.editions:
@@ -224,6 +224,11 @@ class Catalyst(CMakePackage):
             ])
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
+
+        arch = spec.architecture
+        if(arch.platform == 'linux' and arch.target == 'aarch64'):
+            cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
+            cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 
         return cmake_args
 

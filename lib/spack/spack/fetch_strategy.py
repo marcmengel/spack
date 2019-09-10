@@ -95,8 +95,9 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         # constructed at package construction time.  This is where things
         # will be fetched.
         self.stage = None
-        # Possibly disable caching for this strategy.
-        self._no_cache_opt = kwargs.pop('no_cache', False)
+        # Enable or disable caching for this strategy based on
+        # 'no_cache' option from version directive.
+        self._cache_enabled = not kwargs.pop('no_cache', False)
 
     def set_stage(self, stage):
         """This is called by Stage before any of the fetching
@@ -104,8 +105,8 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         self.stage = stage
 
     @property
-    def no_cache_opt(self):
-        return self._no_cache_opt
+    def cache_enabled(self):
+        return self._cache_enabled
 
     # Subclasses need to implement these methods
     def fetch(self):
@@ -162,6 +163,51 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     @classmethod
     def matches(cls, args):
         return cls.url_attr in args
+
+
+class BundleFetchStrategy(FetchStrategy):
+    """
+    Fetch strategy associated with bundle, or no-code, packages.
+
+    Having a basic fetch strategy is a requirement for executing post-install
+    hooks.  Consequently, this class provides the API but does little more
+    than log messages.
+
+    TODO: Remove this class by refactoring resource handling and the link
+    between composite stages and composite fetch strategies (see #11981).
+    """
+    #: This is a concrete fetch strategy for no-code packages.
+    enabled = True
+
+    #: There is no associated URL keyword in ``version()`` for no-code
+    #: packages but this property is required for some strategy-related
+    #: functions (e.g., check_pkg_attributes).
+    url_attr = ''
+
+    def fetch(self):
+        tty.msg("No code to fetch.")
+        return True
+
+    def check(self):
+        tty.msg("No code to check.")
+
+    def expand(self):
+        tty.msg("No archive to expand.")
+
+    def reset(self):
+        tty.msg("No code to reset.")
+
+    def archive(self, destination):
+        tty.msg("No code to archive.")
+
+    @property
+    def cachable(self):
+        tty.msg("No code to cache.")
+        return False
+
+    def source_id(self):
+        tty.msg("No code to be uniquely identified.")
+        return ''
 
 
 @pattern.composite(interface=FetchStrategy)
@@ -326,7 +372,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def cachable(self):
-        return (not self.no_cache_opt) and bool(self.digest)
+        return self._cache_enabled and bool(self.digest)
 
     @_needs_stage
     def expand(self):
@@ -642,8 +688,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     """
     enabled = True
     url_attr = 'git'
-    optional_attrs = ['tag', 'branch', 'commit', 'submodules',
-                      'all_branches', 'full_depth']
+    optional_attrs = ['tag', 'branch', 'commit', 'submodules', 'get_full_repo']
 
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
@@ -654,8 +699,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         self._git = None
         self.submodules = kwargs.get('submodules', False)
-        self.full_depth = kwargs.get('full_depth', False)
-        self.all_branches = kwargs.get('all_branches', False)
+        self.get_full_repo = kwargs.get('get_full_repo', False)
 
     @property
     def git_version(self):
@@ -676,7 +720,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return (not self.no_cache_opt) and bool(self.commit or self.tag)
+        return self._cache_enabled and bool(self.commit or self.tag)
 
     def source_id(self):
         return self.commit or self.tag
@@ -744,7 +788,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
             if self.git_version >= ver('1.7.10'):
-                if self.all_branches:
+                if self.get_full_repo:
                     args.append('--no-single-branch')
                 else:
                     args.append('--single-branch')
@@ -752,9 +796,9 @@ class GitFetchStrategy(VCSFetchStrategy):
             with temp_cwd():
                 # Yet more efficiency: only download a 1-commit deep
                 # tree, if the in-use git and protocol permit it.
-                if (not self.full_depth) and \
+                if (not self.get_full_repo) and \
                    self.git_version >= ver('1.7.1') and \
-                   (not self.url.startswith('http:')) and (not self.url.startswith('/')):
+                   self.protocol_supports_shallow_clone():
                     args.extend(['--depth', '1'])
 
                 args.extend([self.url])
@@ -804,6 +848,13 @@ class GitFetchStrategy(VCSFetchStrategy):
             self.git(*co_args)
             self.git(*clean_args)
 
+    def protocol_supports_shallow_clone(self):
+        """Shallow clone operations (--depth #) are not supported by the basic
+        HTTP protocol or by no-protocol file specifications.
+        Use (e.g.) https:// or file:// instead."""
+        return not (self.url.startswith('http://') or
+                    self.url.startswith('/'))
+
     def __str__(self):
         return '[git] {0}'.format(self._repo_info())
 
@@ -845,7 +896,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return (not self.no_cache_opt) and bool(self.revision)
+        return self._cache_enabled and bool(self.revision)
 
     def source_id(self):
         return self.revision
@@ -953,7 +1004,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return (not self.no_cache_opt) and bool(self.revision)
+        return self._cache_enabled and bool(self.revision)
 
     def source_id(self):
         return self.revision
@@ -1111,6 +1162,12 @@ def _from_merged_attrs(fetcher, pkg, version):
 def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
+
+    # No-code packages have a custom fetch strategy to work around issues
+    # with resource staging.
+    if not pkg.has_code:
+        return BundleFetchStrategy()
+
     check_pkg_attributes(pkg)
 
     if not isinstance(version, Version):
@@ -1153,6 +1210,7 @@ def from_list_url(pkg):
     """If a package provides a URL which lists URLs for resources by
        version, this can can create a fetcher for a URL discovered for
        the specified package's version."""
+
     if pkg.list_url:
         try:
             versions = pkg.fetch_remote_versions()

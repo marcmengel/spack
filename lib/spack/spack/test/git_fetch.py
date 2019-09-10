@@ -27,7 +27,8 @@ pytestmark = pytest.mark.skipif(
 _mock_transport_error = 'Mock HTTP transport error'
 
 
-@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
+@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1',
+                        '1.7.10', '1.7.1', '1.7.0'])
 def git_version(request, monkeypatch):
     """Tests GitFetchStrategy behavior for different git versions.
 
@@ -40,7 +41,8 @@ def git_version(request, monkeypatch):
     real_git_version = ver(git('--version', output=str).lstrip('git version '))
 
     if request.param is None:
-        yield    # don't patch; run with the real git_version method.
+        # Don't patch; run with the real git_version method.
+        yield real_git_version
     else:
         test_git_version = ver(request.param)
         if test_git_version > real_git_version:
@@ -50,7 +52,7 @@ def git_version(request, monkeypatch):
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
         monkeypatch.setattr(GitFetchStrategy, 'git_version', test_git_version)
-        yield
+        yield test_git_version
 
 
 @pytest.fixture
@@ -172,16 +174,14 @@ def test_needs_stage():
         fetcher.fetch()
 
 
-@pytest.mark.parametrize("all_branches", [True, False])
-def test_all_branches(all_branches, mock_git_repository,
-                      config, mutable_mock_packages):
-    """Ensure that we can force all branches to be downloaded."""
+@pytest.mark.parametrize("get_full_repo", [True, False])
+def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
+                       config, mutable_mock_packages):
+    """Ensure that we can clone a full repository."""
 
-    git_version\
-        = ver(mock_git_repository.git_exe('--version', output=str).
-              lstrip('git version '))
-    if git_version < ver('1.7.10'):
-        pytest.skip('Not testing --single-branch for older git')
+    if git_version < ver('1.7.1'):
+        pytest.skip('Not testing get_full_repo for older git {0}'.
+                    format(git_version))
 
     secure = True
     type_of_test = 'tag-branch'
@@ -191,9 +191,8 @@ def test_all_branches(all_branches, mock_git_repository,
     spec = Spec('git-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-
     args = copy.copy(t.args)
-    args['all_branches'] = all_branches
+    args['get_full_repo'] = get_full_repo
     pkg.versions[ver('git')] = args
 
     with pkg.stage:
@@ -203,40 +202,7 @@ def test_all_branches(all_branches, mock_git_repository,
                 branches\
                     = mock_git_repository.git_exe('branch', '-a',
                                                   output=str).splitlines()
-        nbranches = len(branches)
-        if all_branches:
-            assert(nbranches == 5)
-        else:
-            assert(nbranches == 2)
-
-
-@pytest.mark.parametrize("full_depth", [True, False])
-def test_full_depth(full_depth, mock_git_repository,
-                    config, mutable_mock_packages):
-    """Ensure that we can clone a repository at full depth."""
-
-    git_version\
-        = ver(mock_git_repository.git_exe('--version', output=str).
-              lstrip('git version '))
-    if git_version < ver('1.7.1'):
-        pytest.skip('Not testing --depth for older git')
-
-    secure = True
-    type_of_test = 'tag-branch'
-
-    t = mock_git_repository.checks[type_of_test]
-
-    spec = Spec('git-test')
-    spec.concretize()
-    pkg = spack.repo.get(spec)
-    args = copy.copy(t.args)
-    args['full_depth'] = full_depth
-    pkg.versions[ver('git')] = args
-
-    with pkg.stage:
-        with spack.config.override('config:verify_ssl', secure):
-            pkg.do_stage()
-            with working_dir(pkg.stage.source_path):
+                nbranches = len(branches)
                 commits\
                     = mock_git_repository.\
                     git_exe('log', '--graph',
@@ -244,7 +210,10 @@ def test_full_depth(full_depth, mock_git_repository,
                             '--abbrev-commit',
                             output=str).splitlines()
                 ncommits = len(commits)
-        if full_depth:
+
+        if get_full_repo:
+            assert(nbranches == 5)
             assert(ncommits == 2)
         else:
+            assert(nbranches == 2)
             assert(ncommits == 1)

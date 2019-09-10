@@ -10,13 +10,15 @@ class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in
     parallel"""
     homepage = "http://www.p4est.org"
-    url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
+    url      = "http://p4est.github.io/release/p4est-2.2.tar.gz"
 
     maintainers = ['davydden']
 
+    version('2.2', sha256='1549cbeba29bee2c35e7cc50a90a04961da5f23b6eada9c8047f511b90a8e438')
     version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
 
+    variant('mpi', default=True, description='Enable MPI')
     variant('openmp', default=False, description='Enable OpenMP')
 
     # build dependencies
@@ -25,7 +27,7 @@ class P4est(AutotoolsPackage):
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('zlib')
 
     # from sc upstream, correct the default libraries
@@ -44,7 +46,6 @@ class P4est(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            '--enable-mpi',
             '--enable-shared',
             '--disable-vtk-binary',
             '--without-blas',
@@ -55,6 +56,11 @@ class P4est(AutotoolsPackage):
             'FC=%s'  % self.spec['mpi'].mpifc,
             'F77=%s' % self.spec['mpi'].mpif77
         ]
+
+        if '~mpi' in self.spec:
+            args.append('--disable-mpi')
+        else:
+            args.append('--enable-mpi')
 
         if '+openmp' in self.spec:
             try:

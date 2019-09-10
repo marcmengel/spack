@@ -45,4 +45,8 @@ class Jsoncpp(CMakePackage):
         cxxstd = self.spec.variants['cxxstd'].value
         if cxxstd != 'default':
             args.append('-DCMAKE_CXX_STANDARD={0}'.format(cxxstd))
+        if self.run_tests:
+            args.append('-DJSONCPP_WITH_TESTS=ON')
+        else:
+            args.append('-DJSONCPP_WITH_TESTS=OFF')
         return args
