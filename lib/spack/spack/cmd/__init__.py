@@ -11,13 +11,12 @@ import sys
 import argparse
 
 import llnl.util.tty as tty
-from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
-import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
@@ -31,22 +30,29 @@ python_list = list
 # Patterns to ignore in the commands directory when looking for commands.
 ignore_files = r'^\.|^__init__.py$|^#'
 
-SETUP_PARSER = "setup_parser"
-DESCRIPTION = "description"
-
-# All found spack commands
-_all_commands = None
-_default_command_path = spack.paths.command_path
-
 
 def python_name(cmd_name):
     """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
     return cmd_name.replace("-", "_")
 
 
+def require_python_name(pname):
+    """Require that the provided name is a valid python name (per
+    python_name())."""
+    if python_name(pname) != pname:
+        raise PythonNameError(pname)
+
+
 def cmd_name(python_name):
     """Convert module name (with ``_``) to command name (with ``-``)."""
     return python_name.replace('_', '-')
+
+
+def require_cmd_name(cname):
+    """Require that the provided name is a valid command name (per
+    cmd_name())."""
+    if cmd_name(cname) != cname:
+        raise CommandNameError(cname)
 
 
 def find_commands(*command_paths):
@@ -67,15 +73,6 @@ def find_commands(*command_paths):
     return command_list
 
 
-def all_commands():
-    """Return all top level commands available with Spack."""
-    global _all_commands
-    if _all_commands is None:
-        extension_paths = spack.extensions.get_command_paths()
-        _all_commands = find_commands(_default_command_path, *extension_paths)
-    return _all_commands
-
-
 def remove_options(parser, *options):
     """Remove some options from a parser."""
     for option in options:
@@ -83,56 +80,6 @@ def remove_options(parser, *options):
             if vars(action)['option_strings'][0] == option:
                 parser._handle_conflict_resolve(None, [(option, action)])
                 break
-
-
-def get_module_from(cmd_name, namespace):
-    """Imports the module for a particular command from the specified namespace.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-        namespace (str): namespace for command.
-    """
-    pname = python_name(cmd_name)
-    module_name = '{0}.cmd.{1}'.format(namespace, pname)
-    module = __import__(module_name,
-                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                        level=0)
-    tty.debug('Imported command {0} as {1}'.format(cmd_name, module_name))
-
-    attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
-    attr_setdefault(module, DESCRIPTION, "")
-
-    if not hasattr(module, pname):
-        tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, pname))
-    return module
-
-
-def get_module(cmd_name):
-    """Imports the module for a particular Spack or extension top-level
-    command name and returns it.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-    """
-    try:
-        module = get_module_from(cmd_name, 'spack')
-    except ImportError:
-        module = spack.extensions.load_command_extension(cmd_name)
-    return module
-
-
-def get_command(cmd_name):
-    """Imports a top level command's function from a module and returns it.
-
-    Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
-    """
-    pname = python_name(cmd_name)
-    return getattr(get_module(cmd_name), pname)
 
 
 def parse_specs(args, **kwargs):
@@ -405,3 +352,22 @@ def extant_file(f):
     if not os.path.isfile(f):
         raise argparse.ArgumentTypeError('%s does not exist' % f)
     return f
+
+
+########################################
+# Exceptions
+########################################
+class PythonNameError(SpackError):
+    """Exception class thrown for impermissible python names"""
+    def __init__(self, name):
+        self.name = name
+        super(PythonNameError, self).__init__(
+            '{0} is not a permissible Python name.'.format(name))
+
+
+class CommandNameError(SpackError):
+    """Exception class thrown for impermissible command names"""
+    def __init__(self, name):
+        self.name = name
+        super(CommandNameError, self).__init__(
+            '{0} is not a permissible Spack command name.'.format(name))
