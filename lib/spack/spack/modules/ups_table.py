@@ -66,7 +66,7 @@ class UpsTableFileLayout(BaseFileLayout):
     @property
     def filename(self):
         """Name of the module file for the current spec."""
-        fn = "{}-{}-{}.table".format(self.spec.name, self.spec.version, self.spec._hash)
+        fn = "{0}-{1}-{2}.table".format(self.spec.name, self.spec.version, self.spec._hash)
         fp = os.path.join(self.dirname(), fn)
         return  fp
 
