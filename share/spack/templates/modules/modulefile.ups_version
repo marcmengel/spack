@@ -4,6 +4,7 @@ VERSION = {{spec.version}}
 
 {% if   (spec.architecture|string).find('i686')>0   %}{%set upsbits = '' %}
 {% elif (spec.architecture|string).find('x86_64')>0 %}{%set upsbits = '64bit' %}
+{% else  %}{%set upsbits = '64bit' %}
 {% endif %}
 
 {% if   (spec.architecture|string).find('darwin')>=0 %}{%set upsos = 'Darwin' %}
