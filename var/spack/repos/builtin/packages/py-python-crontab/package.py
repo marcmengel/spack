@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyPythonCrontab(PythonPackage):
     """Python package for managing crontab files"""
 
@@ -9,4 +10,3 @@ class PyPythonCrontab(PythonPackage):
     version('2.3.6', 'e7f70f37e57080b8e837e6aed1c8fad8')
 
     depends_on('py-setuptools',   type='build')
-
