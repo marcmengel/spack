@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyPoms(PythonPackage):
     """POMS: Fermilab Production Operations Management System"""
 
@@ -10,7 +11,7 @@ class PyPoms(PythonPackage):
     version('4_1_0', 'c8682135a0d4eae8df00a29ececb6020')
     version('4_2_0', 'cf496f78f5e988684d32afa352b0c77b')
 
-    depends_on('python',               type=('build','run'))
+    depends_on('python',               type=('build', 'run'))
     depends_on('py-cherrypy',          type=('build', 'run'))
     depends_on('py-futures',           type=('build', 'run'))
     depends_on('py-jinja2',            type=('build', 'run'))
