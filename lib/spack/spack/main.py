@@ -633,7 +633,9 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {
         'tcl': list(),
-        'lmod': list()
+        'lmod': list(),
+        'ups_table': list(),
+        'ups_version': list()
     }
     module_roots = spack.config.get('config:module_roots')
     module_roots = dict(

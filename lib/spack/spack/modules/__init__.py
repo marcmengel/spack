@@ -15,9 +15,13 @@ from .lmod import LmodModulefileWriter
 __all__ = [
     'TclModulefileWriter',
     'LmodModulefileWriter'
+    'UpsTableModulefileWriter',
+    'UpsVersionModulefileWriter',
 ]
 
 module_types = {
     'tcl': TclModulefileWriter,
-    'lmod': LmodModulefileWriter
+    'lmod': LmodModulefileWriter,
+    'ups_table': UpsTableModulefileWriter,
+    'ups_version': UpsVersionModulefileWriter,
 }

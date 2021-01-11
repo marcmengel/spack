@@ -16,6 +16,8 @@
 modules:
   enable:
     - tcl
+    - ups_table
+    - ups_version
   prefix_inspections:
     bin:
       - PATH

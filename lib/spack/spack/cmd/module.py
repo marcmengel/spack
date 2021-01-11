@@ -9,6 +9,8 @@ import llnl.util.tty as tty
 
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
+import spack.cmd.modules.ups_version
+import spack.cmd.modules.ups_table
 
 description = "manipulate module files"
 section = "user environment"
@@ -24,6 +26,8 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)
+    spack.cmd.modules.ups_table.add_command(sp, _subcommands)
+    spack.cmd.modules.ups_version.add_command(sp, _subcommands)
 
     for name in _deprecated_commands:
         add_deprecated_command(sp, name)

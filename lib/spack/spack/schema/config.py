@@ -61,6 +61,8 @@ properties = {
                     'tcl': {'type': 'string'},
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
+                    'ups_table': {'type': 'string'},
+                    'ups_version': {'type': 'string'},
                 },
                 'deprecatedProperties': {
                     'properties': ['dotkit'],

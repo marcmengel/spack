@@ -38,6 +38,9 @@ config:
   module_roots:
     tcl:    $spack/share/spack/modules
     lmod:   $spack/share/spack/lmod
+    ups_table:   $spack/share/spack/upsdb
+    ups_version: $spack/share/spack/upsdb
+
 
 
   # Temporary locations Spack can try to use for builds.

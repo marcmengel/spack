@@ -131,7 +131,7 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']
+                    'enum': ['tcl', 'dotkit', 'lmod', 'ups_table', 'ups_version']
                 },
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
@@ -167,6 +167,20 @@ properties = {
                     # Base configuration
                     module_type_configuration,
                     {}  # Specific dotkit extensions
+                ]
+            },
+            'ups_table': {
+                'allOf': [
+                    # Base configuration
+                    module_type_configuration,
+                    {}  # Specific tcl extensions
+                ]
+            },
+            'ups_version': {
+                'allOf': [
+                    # Base configuration
+                    module_type_configuration,
+                    {}  # Specific tcl extensions
                 ]
             },
         },
