@@ -1,0 +1,13 @@
+diff --git a/include/sunlinsol/sunlinsol_superludist.h b/include/sunlinsol/sunlinsol_superludist.h
+index 34512c3f2..80c9b8c66 100644
+--- a/include/sunlinsol/sunlinsol_superludist.h
++++ b/include/sunlinsol/sunlinsol_superludist.h
+@@ -40,7 +40,7 @@
+ #include <sundials/sundials_nvector.h>
+ #include <sunmatrix/sunmatrix_slunrloc.h>
+ 
+-#if (SUPERLU_DIST_MAJOR_VERSION >= 6) && (SUPERLU_DIST_MINOR_VERSION >= 3)
++#if (SUPERLU_DIST_MAJOR_VERSION >= 7) || ((SUPERLU_DIST_MAJOR_VERSION == 6) && (SUPERLU_DIST_MINOR_VERSION >= 3))
+ #define xLUstructInit dLUstructInit
+ #define xScalePermstructInit dScalePermstructInit
+ #define xScalePermstructFree dScalePermstructFree
