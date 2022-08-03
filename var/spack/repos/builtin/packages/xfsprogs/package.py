@@ -36,9 +36,13 @@ class Xfsprogs(AutotoolsPackage):
                         self.spec['util-linux'].prefix.include.blkid)
 
     def configure_args(self):
-        args = ['LDFLAGS=-lintl',
-                "--with-systemd-unit-dir=" +
-                self.spec['xfsprogs'].prefix.lib.systemd.system]
+        if self.spec['gettext'].prefix != '/usr':
+	    args = ['LDFLAGS=-lintl',
+		    "--with-systemd-unit-dir=" +
+		    self.spec['xfsprogs'].prefix.lib.systemd.system]
+        else:
+	    args = ["--with-systemd-unit-dir=" +
+		    self.spec['xfsprogs'].prefix.lib.systemd.system]
         return args
 
     def install(self, spec, prefix):

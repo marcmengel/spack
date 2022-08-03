@@ -76,5 +76,6 @@ class Krb5(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == 'ldlibs':
-            flags.append('-lintl')
+            if self.spec['gettext'].prefix != '/usr':
+		flags.append('-lintl')
         return (flags, None, None)

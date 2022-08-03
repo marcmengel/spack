@@ -22,7 +22,11 @@ class Rrdtool(AutotoolsPackage):
     depends_on('perl-extutils-makemaker')
 
     def configure_args(self):
-        args = ['LDFLAGS=-lintl',
-                "--with-systemdsystemunitdir=" +
-                self.spec['rrdtool'].prefix.lib.systemd.system]
+        if self.spec['gettext'].prefix != '/usr':
+	    args = ['LDFLAGS=-lintl',
+		    "--with-systemdsystemunitdir=" +
+		    self.spec['rrdtool'].prefix.lib.systemd.system]
+        else:
+	    args = ["--with-systemdsystemunitdir=" +
+		    self.spec['rrdtool'].prefix.lib.systemd.system]
         return args

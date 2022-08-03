@@ -126,7 +126,10 @@ class Extrae(AutotoolsPackage):
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
         # - linking error
         # https://github.com/bsc-performance-tools/extrae/issues/57
-        args.append('LDFLAGS=-lintl -pthread')
+        if self.spec['gettext'].prefix != '/usr':
+	    args.append('LDFLAGS=-lintl -pthread')
+        else:
+	    args.append('-pthread')
 
         return(args)
 
