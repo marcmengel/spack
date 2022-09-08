@@ -53,6 +53,8 @@ class Spdlog(CMakePackage):
     depends_on('fmt@7:', when='@1.7:')
     depends_on('fmt@8:', when='@1.9:')
 
+    patch('spdlog_1_8_2.patch', when='@1.8.2')
+
     def cmake_args(self):
         args = []
 

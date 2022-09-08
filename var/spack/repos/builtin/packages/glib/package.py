@@ -86,6 +86,7 @@ class Glib(Package):
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=scientific6')
+    patch('python_invocation.patch', when='@2.72.1')
 
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.

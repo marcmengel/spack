@@ -28,7 +28,7 @@ class Acl(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         if self.spec['gettext'].prefix != '/usr':
-		env.append_flags('LDFLAGS', '-lintl')
+                env.append_flags('LDFLAGS', '-lintl')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

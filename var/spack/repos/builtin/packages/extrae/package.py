@@ -127,9 +127,9 @@ class Extrae(AutotoolsPackage):
         # - linking error
         # https://github.com/bsc-performance-tools/extrae/issues/57
         if self.spec['gettext'].prefix != '/usr':
-	    args.append('LDFLAGS=-lintl -pthread')
+            args.append('LDFLAGS=-lintl -pthread')
         else:
-	    args.append('-pthread')
+            args.append('-pthread')
 
         return(args)
 

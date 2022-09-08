@@ -33,7 +33,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
 
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
-    force_autoreconf = True
+    # force_autoreconf = True
 
     def flag_handler(self, name, flags):
         # Work around macOS Catalina / Xcode 11 code generation bug

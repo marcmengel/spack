@@ -32,5 +32,5 @@ class Libxpm(AutotoolsPackage, XorgPackage):
         # https://github.com/spack/spack/issues/9149 for details.
         if 'gettext' in self.spec:
             if self.spec['gettext'].prefix != '/usr':
-		env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
-		    self.spec['gettext'].prefix.lib))
+                env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+                    self.spec['gettext'].prefix.lib))

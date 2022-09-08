@@ -1046,6 +1046,7 @@ config.update(get_paths())
 
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
+            print("python: ldlibrary is", ldlibrary)
             win_bin_dir = self.config_vars['BINDIR']
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))

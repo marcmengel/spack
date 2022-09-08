@@ -33,7 +33,7 @@ class Xfd(AutotoolsPackage, XorgPackage):
     def flag_handler(self, name, flags):
         if name == 'ldlibs':
             if self.spec['gettext'].prefix != '/usr':
-		flags.append('-lintl')
+                flags.append('-lintl')
 
         return (flags, None, None)
 

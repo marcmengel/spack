@@ -16,6 +16,7 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
+    version('8.0.23', sha256='d26cbbf9eccf8c8f14743c3e26c37a8ba71ebd45e8b2d66c6dd37790037bb787')
     version('8.0.19', sha256='a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834')
     version('8.0.18', sha256='4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8')
     version('8.0.17', sha256='c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6')
@@ -62,6 +63,8 @@ class Mysql(CMakePackage):
     # std::byte.
     conflicts('cxxstd=17', when='@8.0.0:~client_only')
 
+    patch('boost75.patch', when='@8.0.23')
+
     provides('mysql-client')
 
     # https://dev.mysql.com/doc/refman/8.0/en/source-installation.html
@@ -82,10 +85,13 @@ class Mysql(CMakePackage):
     # Each version of MySQL requires a specific version of boost
     # See BOOST_PACKAGE_NAME in cmake/boost.cmake
     # 8.0.19+
-    depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19: cxxstd=98')
-    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=11')
-    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19: cxxstd=14')
-    depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19: cxxstd=17')
+    depends_on('boost@1.75.0 cxxstd=11', type='build', when='@8.0.23 cxxstd=11')
+    depends_on('boost@1.75.0 cxxstd=14', type='build', when='@8.0.23 cxxstd=14')
+    depends_on('boost@1.75.0 cxxstd=17', type='build', when='@8.0.23 cxxstd=17')
+    depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19:8.0.22 cxxstd=98')
+    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19:8.0.22 cxxstd=11')
+    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19:8.0.22 cxxstd=14')
+    depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19:8.0.22 cxxstd=17')
     # 8.0.16--8.0.18
     depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16:8.0.18 cxxstd=98')
     depends_on('boost@1.69.0 cxxstd=11', type='build', when='@8.0.16:8.0.18 cxxstd=11')
@@ -180,6 +186,7 @@ class Mysql(CMakePackage):
             if int(cxxstd) > 14:
                 env.append_flags('CXXFLAGS', '-Wno-error=register')
 
-        if 'python' in self.spec.flat_dependencies() and \
-           self.spec.satisfies('@:7'):
-            self._fix_dtrace_shebang(env)
+        # mengel -- getting errors here, not needed for 8.0.x builds...
+        #if 'python' in self.spec.flat_dependencies() and \
+        #   self.spec.satisfies('@:7'):
+        #    self._fix_dtrace_shebang(env)

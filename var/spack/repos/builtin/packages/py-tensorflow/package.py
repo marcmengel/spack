@@ -312,6 +312,10 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+numa', when='@:1.12.0,1.12.2:1.13')
     conflicts('+dynamic_kernels', when='@:1.12.0,1.12.2:1.12.3')
 
+    # bad checksum on source module
+    patch('icu-checksum.patch',  when='@1.13.1')
+    #  https://github.com/tensorflow/tensorflow/issues/40688
+    patch('tf_numpy.patch',  when='^numpy@1.19:')
     # TODO: why is this needed?
     patch('url-zlib.patch',  when='@0.10.0')
     # TODO: why is this needed?

@@ -28,7 +28,7 @@ class OciSystemdHook(AutotoolsPackage):
     depends_on('go-md2man')
 
     def configure_args(self):
-	if self.spec['gettext'].prefix != '/usr':
+        if self.spec['gettext'].prefix != '/usr':
             args = ['LDFLAGS=-lintl']
         return args
 

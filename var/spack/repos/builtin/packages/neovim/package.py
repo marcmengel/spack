@@ -102,7 +102,7 @@ class Neovim(CMakePackage):
     depends_on("jemalloc", type="link", when="platform=linux")
     depends_on("lua-lpeg", type="link")
     depends_on("lua-mpack", type="link")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
     depends_on("libtermkey", type="link")
     depends_on("libuv", type="link")
     depends_on("libluv", type="link")

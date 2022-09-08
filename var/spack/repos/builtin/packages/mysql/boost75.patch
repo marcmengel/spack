@@ -1,0 +1,45 @@
+--- spack-src/cmake/boost.cmake.orig	2022-08-04 17:45:55.870902707 -0500
++++ spack-src/cmake/boost.cmake	2022-08-04 17:49:06.738827812 -0500
+@@ -20,7 +20,7 @@
+ # along with this program; if not, write to the Free Software
+ # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
+ 
+-# We want boost 1.73.0 in order to build our boost/geometry code.
++# We want boost 1.75.0 in order to build our boost/geometry code.
+ # The boost tarball is fairly big, and takes several minutes
+ # to download. So we recommend downloading/unpacking it
+ # only once, in a place visible from any git sandbox.
+@@ -38,10 +38,10 @@
+ # we assume that the correct version (see below)
+ # is installed on the compile host in the standard location.
+ 
+-SET(BOOST_PACKAGE_NAME "boost_1_73_0")
++SET(BOOST_PACKAGE_NAME "boost_1_75_0")
+ SET(BOOST_TARBALL "${BOOST_PACKAGE_NAME}.tar.gz")
+ SET(BOOST_DOWNLOAD_URL
+-  "https://dl.bintray.com/boostorg/release/1.73.0/source/${BOOST_TARBALL}"
++  "https://dl.bintray.com/boostorg/release/1.75.0/source/${BOOST_TARBALL}"
+   )
+ 
+ SET(OLD_PACKAGE_NAMES
+@@ -300,9 +300,9 @@
+   COULD_NOT_FIND_BOOST()
+ ENDIF()
+ 
+-IF(NOT BOOST_MINOR_VERSION EQUAL 73)
++IF(NOT BOOST_MINOR_VERSION EQUAL 75)
+   MESSAGE(WARNING "Boost minor version found is ${BOOST_MINOR_VERSION} "
+-    "we need 73"
++    "we need 75"
+     )
+   COULD_NOT_FIND_BOOST()
+ ENDIF()
+@@ -310,7 +310,7 @@
+ MESSAGE(STATUS "BOOST_INCLUDE_DIR ${BOOST_INCLUDE_DIR}")
+ 
+ # We have a limited set of patches/bugfixes here:
+-SET(BOOST_PATCHES_DIR "${CMAKE_SOURCE_DIR}/include/boost_1_73_0/patches")
++SET(BOOST_PATCHES_DIR "${CMAKE_SOURCE_DIR}/include/boost_1_75_0/patches")
+ 
+ # Bug in sqrt(NaN) on 32bit platforms
+ IF(SIZEOF_VOIDP EQUAL 4)

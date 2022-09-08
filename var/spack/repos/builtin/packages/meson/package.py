@@ -34,7 +34,7 @@ class Meson(PythonPackage):
     version('0.57.1', sha256='0c043c9b5350e9087cd4f6becf6c0d10b1d618ca3f919e0dcca2cdf342360d5d')
     version('0.57.0', sha256='fd26a27c1a509240c668ebd29d280649d9239cf8684ead51d5cb499d1e1188bd')
     version('0.56.2', sha256='aaae961c3413033789248ffe6762589e80b6cf487c334d0b808e31a32c48f35f')
-    version('0.56.0', sha256='a9ca7adf66dc69fbb7e583f7c7aef16b9fe56ec2874a3d58747e69a3affdf300')
+    version('2.56.0', sha256='a9ca7adf66dc69fbb7e583f7c7aef16b9fe56ec2874a3d58747e69a3affdf300')
     version('0.55.3', sha256='2b276df50c5b13ccdbfb14d3333141e9e7985aca31b60400b3f3e0be2ee6897e')
     version('0.55.2', sha256='56244896e56c2b619f819d047b6de412ecc5250975ee8717f1e329113d178e06')
     version('0.55.1', sha256='c7ebf2fff5934a974c7edd1aebb5fc9c3e1da5ae3184a29581fde917638eea39')

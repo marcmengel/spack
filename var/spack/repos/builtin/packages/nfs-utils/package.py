@@ -31,7 +31,7 @@ class NfsUtils(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         if self.spec['gettext'].prefix != '/usr':
-	    env.append_flags('LIBS', '-lintl')
+            env.append_flags('LIBS', '-lintl')
 
     def configure_args(self):
         args = ['--disable-gss', '--with-rpcgen=internal']

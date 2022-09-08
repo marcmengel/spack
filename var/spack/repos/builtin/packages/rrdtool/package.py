@@ -23,10 +23,10 @@ class Rrdtool(AutotoolsPackage):
 
     def configure_args(self):
         if self.spec['gettext'].prefix != '/usr':
-	    args = ['LDFLAGS=-lintl',
-		    "--with-systemdsystemunitdir=" +
-		    self.spec['rrdtool'].prefix.lib.systemd.system]
+            args = ['LDFLAGS=-lintl',
+                    "--with-systemdsystemunitdir=" +
+                    self.spec['rrdtool'].prefix.lib.systemd.system]
         else:
-	    args = ["--with-systemdsystemunitdir=" +
-		    self.spec['rrdtool'].prefix.lib.systemd.system]
+            args = ["--with-systemdsystemunitdir=" +
+                    self.spec['rrdtool'].prefix.lib.systemd.system]
         return args

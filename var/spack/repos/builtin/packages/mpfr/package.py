@@ -37,7 +37,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     variant('libs', default='shared,static', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
 
-    force_autoreconf = True
+    #force_autoreconf = True
 
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs

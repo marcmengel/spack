@@ -407,6 +407,8 @@ class Boost(Package):
         if spec.satisfies('@:1.58'):
             return ''
 
+        print('python libs[0]: ',  spec['python'].libs[0])
+
         return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
             spec['python'].command.path,

@@ -1,0 +1,24 @@
+--- spack-src/src/java_tools/buildjar/java/com/google/devtools/build/buildjar/javac/plugins/dependency/StrictJavaDepsPlugin.java.orig	2022-08-05 22:34:11.294450000 +0000
++++ spack-src/src/java_tools/buildjar/java/com/google/devtools/build/buildjar/javac/plugins/dependency/StrictJavaDepsPlugin.java	2022-08-05 22:34:13.653450000 +0000
+@@ -32,6 +32,8 @@
+ import com.sun.tools.javac.comp.AttrContext;
+ import com.sun.tools.javac.comp.Env;
+ import com.sun.tools.javac.main.JavaCompiler;
++import com.sun.tools.javac.resources.CompilerProperties.Errors;
++import com.sun.tools.javac.resources.CompilerProperties.Warnings;
+ import com.sun.tools.javac.tree.JCTree;
+ import com.sun.tools.javac.tree.TreeInfo;
+ import com.sun.tools.javac.tree.TreeScanner;
+@@ -174,10 +176,10 @@
+       try {
+         switch (dependencyModule.getStrictJavaDeps()) {
+           case ERROR:
+-            log.error(diagnostic.pos(), "proc.messager", diagnostic.message());
++            log.error(diagnostic.pos(), Errors.ProcMessager(diagnostic.message()));
+             break;
+           case WARN:
+-            log.warning(diagnostic.pos(), "proc.messager", diagnostic.message());
++            log.warning(diagnostic.pos(), Warnings.ProcMessager(diagnostic.message()));
+             break;
+           case OFF: // continue below
+         }

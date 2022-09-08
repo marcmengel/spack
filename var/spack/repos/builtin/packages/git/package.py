@@ -199,8 +199,8 @@ class Git(AutotoolsPackage):
         if '+nls' in self.spec:
             if 'intl' in self.spec['gettext'].libs.names:
                 if self.spec['gettext'].prefix != '/usr':
-		    env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
-			self.spec['gettext'].prefix.lib))
+                    env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+                        self.spec['gettext'].prefix.lib))
             env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 

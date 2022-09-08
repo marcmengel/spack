@@ -155,6 +155,8 @@ class Bazel(Package):
     patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
     patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
 
+    patch('bazeljdk.patch', when='@:0.25.2')
+
     executables = ['^bazel$']
 
     @classmethod

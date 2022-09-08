@@ -48,6 +48,8 @@ class Postgresql(AutotoolsPackage):
     variant('tcl', default=False, description='Enable Tcl bindings.')
     variant('gssapi', default=False,
             description='Build with GSSAPI functionality.')
+    variant('gssapi_impl', default='openssl', description='which GSSAPI impl to link to',
+            values=('krb5','openssl'))
     variant('xml', default=False, description='Build with XML support.')
 
     depends_on('readline', when='lineedit=readline')
@@ -57,6 +59,7 @@ class Postgresql(AutotoolsPackage):
     depends_on('perl', when='+perl')
     depends_on('python', when='+python')
     depends_on('libxml2', when='+xml')
+    depends_on('krb5', when='gssapi_impl=krb5')
 
     def configure_args(self):
         config_args = ["--with-openssl"]
@@ -73,6 +76,10 @@ class Postgresql(AutotoolsPackage):
 
         if '+gssapi' in self.spec:
             config_args.append('--with-gssapi')
+
+        if 'gssapi_impl=krb5' in self.spec:
+            config_args.append('--x-includes=%s' % self.spec['krb5'].prefix.include)
+            config_args.append('--x-libraries=%s' % self.spec['krb5'].prefix.lib)
 
         if '+python' in self.spec:
             config_args.append('--with-python')
